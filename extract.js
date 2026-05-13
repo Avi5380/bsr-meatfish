@@ -21,7 +21,12 @@ const files = readdirSync(SRC)
   .filter(f => /\.xlsx?$/i.test(f) && !/^excel\s*\(/.test(f));
 
 // Bank-statement .xls files have a different "Activities" sheet — skipped here.
-const SKIP_FILES = new Set(['1.4.22-31.12.22.xls', 'דפי בנק 1.1.23-6.8.23.xls']);
+// בעלים.xlsx is an exact duplicate of בעלים 20-25.xlsx (same 302 rows) — skip it to avoid double-counting.
+const SKIP_FILES = new Set([
+  '1.4.22-31.12.22.xls',
+  'דפי בנק 1.1.23-6.8.23.xls',
+  'בעלים.xlsx',  // duplicate of בעלים 20-25.xlsx
+]);
 
 // load existing overlay (user-edits + flags) so we don't lose state on re-extract
 const overlay = existsSync(OVERLAY) ? JSON.parse(readFileSync(OVERLAY, 'utf8')) : {};

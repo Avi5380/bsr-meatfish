@@ -164,8 +164,13 @@ function render(hash, cse, del, cls) {
   const officialRelated = hash.summary.related;
   const officialNet     = officialIncome - officialExpense;
 
-  // Owner account — look at financing categories containing "בעלים"
-  const ownerCats = hash.categories.filter(c => c.section === 'financing' && /בעלים/.test(c.name));
+  // Owner account — broad scope: direct owner categories + related-party (חוז) companies.
+  // Uses the same patterns as owner-account.html, so the numbers match.
+  const OWNER_PATTERNS = [
+    /^בעלים/, /הלוואה.*בעלים/, /הלוואות בעלים/, /ריבית בעלי שליטה/, /סגירת חוב בעלים/,
+    /^חוז /, /חוצות/, /אופטיקינג/, /שערים/,
+  ];
+  const ownerCats = hash.categories.filter(c => OWNER_PATTERNS.some(re => re.test(c.name)));
   let ownerCredit = 0, ownerDebit = 0;
   for (const c of ownerCats) { ownerCredit += c.totals.credit; ownerDebit += c.totals.debit; }
   // owner_balance > 0 => owner gave more than took (company owes owner)
