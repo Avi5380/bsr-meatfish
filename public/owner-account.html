@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חשבון בעלים — פירוט תנועות</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --credit:  #2a6f45;
+  --debit:   #c92a2a;
+  --neutral: #6b6b6b;
+  --warn:    #b48700;
+  --c1: #c92a2a; /* yoel debt */
+  --c2: #1c4f7c; /* moti debt */
+  --c3: #6b6b6b; /* company debt */
+  --c4: #7a4d10; /* moti private */
+  --c5: #2a6f45; /* yoel related */
+}
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 32px; margin: 0 0 6px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 18px; }
+h3 { font-size: 16px; color: var(--text); margin: 22px 0 8px; }
+
+.dup-warning {
+  background: #fff5d6;
+  border: 1px solid #d4a800;
+  border-right: 4px solid #d4a800;
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.dup-warning h4 { margin: 0 0 6px; color: #7a4d10; font-size: 15px; }
+
+.controls {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+}
+.ctrl { display: flex; flex-direction: column; gap: 4px; }
+.ctrl label { font-size: 11px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ctrl input, .ctrl select { background: white; border: 1.5px solid var(--line); border-radius: 7px; padding: 6px 10px; font-family: inherit; font-size: 13px; }
+.ctrl input:focus, .ctrl select:focus { outline: none; border-color: var(--text); }
+.ctrl .quick { display: flex; gap: 4px; flex-wrap: wrap; }
+.ctrl .quick button { background: var(--card); border: 1px solid var(--line); padding: 4px 10px; border-radius: 5px; font-family: inherit; font-size: 11px; cursor: pointer; font-weight: 600; }
+.ctrl .quick button:hover { background: #f0ede2; }
+.ctrl .quick button.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+
+.cat-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat-toggle { display: inline-flex; align-items: center; gap: 5px; background: white; border: 1.5px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-weight: 600; font-family: inherit; }
+.cat-toggle.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+.cat-toggle.duplicate { background: #fce4e4; border-color: #c92a2a; color: #8c2c2c; text-decoration: line-through; }
+.cat-toggle.duplicate.active { background: #c92a2a; color: white; text-decoration: none; }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0; }
+.sc { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.sc .label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+.sc .val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sc.credit .val { color: var(--credit); }
+.sc.debit  .val { color: var(--debit); }
+.sc .sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.sc.big { background: #1a1a1a; color: white; }
+.sc.big .label { color: rgba(255,255,255,.7); }
+.sc.big .val.pos { color: #4ade80; }
+.sc.big .val.neg { color: #ff6b5b; }
+
+/* Classification panel */
+.class-panel { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+.class-panel h4 { margin: 0 0 8px; font-size: 14px; }
+.class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; font-size: 12px; }
+.class-row { display: flex; justify-content: space-between; padding: 6px 10px; border-radius: 6px; border-right: 4px solid; align-items: center; gap: 10px; }
+.class-row .name { font-weight: 600; }
+.class-row .val { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.class-row .meta { font-size: 11px; color: var(--text-3); }
+.class-row.c-yoel_debt    { background: #fce4e4; border-color: var(--c1); }
+.class-row.c-moti_debt    { background: #d6e7f5; border-color: var(--c2); }
+.class-row.c-company_debt { background: #ececec; border-color: var(--c3); }
+.class-row.c-moti_private { background: #f0e0c8; border-color: var(--c4); }
+.class-row.c-yoel_related { background: #ddecdb; border-color: var(--c5); }
+.class-row.c-none         { background: #fafaf7; border-color: #ccc; }
+
+.tx-table { background: white; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+th { background: #efebe2; padding: 8px 10px; text-align: right; font-weight: 700; font-size: 11px; position: sticky; top: 0; z-index: 5; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+td.credit { color: var(--credit); }
+td.debit  { color: var(--debit); }
+td.balance.pos { color: var(--credit); }
+td.balance.neg { color: var(--debit); }
+td.cat { font-size: 10px; color: var(--text-3); }
+td.desc { max-width: 240px; word-break: break-word; }
+td.counter { font-size: 11px; color: var(--text-2); max-width: 180px; word-break: break-word; }
+td.cls select {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 160px;
+  max-width: 220px;
+}
+td.note input {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: text;
+  min-width: 160px;
+  max-width: 280px;
+  color: var(--text);
+}
+td.note input:focus { outline: none; border-color: var(--text); }
+td.note input:not(:placeholder-shown) { background: #fff8dc; border-color: #d4a800; font-weight: 600; }
+/* Colored classification selects use inline style — see classifications-shared.js */
+
+tbody tr:hover td { background: #f8f6ef; }
+
+.empty { padding: 30px; text-align: center; color: var(--text-3); }
+.loading { padding: 60px; text-align: center; color: var(--text-3); }
+.spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast { position: fixed; bottom: 24px; inset-inline: 24px; max-width: 320px; margin: 0 auto; background: #1a1a1a; color: white; font-size: 13px; padding: 11px 16px; border-radius: 8px; z-index: 100; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; transform: translateY(10px); pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media print {
+  .topbar, .controls, td.cls { display: none; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>חשבון בעלים — פירוט תנועות</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/summary.html">דוח סיכום</a>
+      <a href="/income-account.html">הכנסות מסווגות</a>
+      <button id="manageClasses">⚙ סיווגים</button>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">חשבון בעלים — פירוט מלא</h1>
+<div class="subtitle" id="subt">טוען...</div>
+
+<div id="dupWarn"></div>
+<div id="controls"></div>
+<div id="summary"></div>
+<div id="classBreakdown"></div>
+
+<h3>תנועות — סווג כל שורה והוסף הערה (למי שיק, וכו')</h3>
+<div class="tx-table">
+  <table>
+    <thead><tr>
+      <th>תאריך</th>
+      <th>קטגוריה</th>
+      <th>תיאור</th>
+      <th>חשבון נגדי</th>
+      <th>חובה (לקח)</th>
+      <th>זכות (הכניס)</th>
+      <th>יתרה</th>
+      <th>סיווג</th>
+      <th>הערה</th>
+    </tr></thead>
+    <tbody id="txBody"><tr><td colspan="9" class="loading"><div class="spinner"></div></td></tr></tbody>
+  </table>
+</div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="/classifications-shared.js"></script>
+<script>
+// Owner-related: direct owner categories + related-party (חוז) companies.
+// The user owns/controls these — money flowing through them often represents owner injection.
+const OWNER_PATTERNS = [
+  /בעלים/,
+  /הלוואה.*בעלים/,
+  /הלוואות בעלים/,
+  /ריבית בעלי שליטה/,
+  /סגירת חוב בעלים/,
+  /^חוז /,            // all חוז (related-party) accounts: חוצות, אופטיקינג, שערים, ביתר
+  /חוצות/, /אופטיקינג/, /שערים/,
+];
+
+const state = {
+  data: null,
+  ownerCats: [],
+  duplicates: [],
+  excludedCategories: new Set(),
+  startDate: '2021-08-01',
+  endDate: null,
+};
+
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 }).format(Math.round((n + Number.EPSILON) * 100) / 100);
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
+const fmtDate = iso => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timeout); t._timeout = setTimeout(()=> t.classList.remove('show'), 1700);
+}
+
+async function load() {
+  await ClsShared.loadClassifications();
+  const r = await fetch('/api/data');
+  state.data = await r.json();
+  state.ownerCats = state.data.categories.filter(c => OWNER_PATTERNS.some(re => re.test(c.name)));
+  detectDuplicates();
+  document.getElementById('manageClasses').addEventListener('click', () => {
+    ClsShared.openClassModal(() => render());
+  });
+  render();
+}
+
+function detectDuplicates() {
+  state.duplicates = [];
+  for (let i = 0; i < state.ownerCats.length; i++) {
+    for (let j = i+1; j < state.ownerCats.length; j++) {
+      const a = state.ownerCats[i], b = state.ownerCats[j];
+      if (a.rowCount === b.rowCount &&
+          Math.abs(a.totals.credit - b.totals.credit) < 0.01 &&
+          Math.abs(a.totals.debit - b.totals.debit) < 0.01 &&
+          a.rowCount > 0) {
+        state.duplicates.push([a.id, b.id]);
+        state.excludedCategories.add(b.id);
+      }
+    }
+  }
+}
+
+function render() {
+  document.getElementById('subt').textContent = `${state.ownerCats.length} קטגוריות · מסונן מ-${fmtDate(state.startDate)}${state.endDate ? ' עד ' + fmtDate(state.endDate) : ' עד היום'}`;
+  renderDupWarning(); renderControls(); renderSummary(); renderClassBreakdown(); renderTransactions();
+}
+
+function renderDupWarning() {
+  if (!state.duplicates.length) { document.getElementById('dupWarn').innerHTML = ''; return; }
+  const lines = state.duplicates.map(([a, b]) => {
+    const catA = state.ownerCats.find(c => c.id === a);
+    const catB = state.ownerCats.find(c => c.id === b);
+    return `<li><strong>${esc(catA.file)}</strong> ו-<strong>${esc(catB.file)}</strong> זהים לחלוטין. אחד מהם הוחרג אוטומטית.</li>`;
+  }).join('');
+  document.getElementById('dupWarn').innerHTML = `
+    <div class="dup-warning">
+      <h4>⚠ זוהו קבצים כפולים</h4>
+      <ul style="margin:0; padding-right:18px">${lines}</ul>
+    </div>
+  `;
+}
+
+function renderControls() {
+  const today = new Date().toISOString().slice(0, 10);
+  const quickRanges = [
+    { label: 'מ-8/2021', start: '2021-08-01', end: null },
+    { label: '2022', start: '2022-01-01', end: '2022-12-31' },
+    { label: '2023', start: '2023-01-01', end: '2023-12-31' },
+    { label: '2024', start: '2024-01-01', end: '2024-12-31' },
+    { label: '2025', start: '2025-01-01', end: '2025-12-31' },
+    { label: 'הכל', start: '2020-01-01', end: null },
+  ];
+
+  document.getElementById('controls').innerHTML = `
+    <div class="controls">
+      <div class="ctrl">
+        <label>מתאריך</label>
+        <input type="date" id="startDate" value="${state.startDate}">
+      </div>
+      <div class="ctrl">
+        <label>עד תאריך</label>
+        <input type="date" id="endDate" value="${state.endDate || today}">
+      </div>
+      <div class="ctrl">
+        <label>תקופות מהירות</label>
+        <div class="quick">
+          ${quickRanges.map((q, i) => `<button data-q="${i}" class="${state.startDate === q.start && (state.endDate || null) === q.end ? 'active' : ''}">${q.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="ctrl" style="flex:1; min-width:280px">
+        <label>קטגוריות (לחץ להחרגה / החזרה)</label>
+        <div class="cat-toggles">
+          ${state.ownerCats.map(c => {
+            const isDup = state.duplicates.some(d => d.includes(c.id));
+            const isActive = !state.excludedCategories.has(c.id);
+            return `<button class="cat-toggle ${isActive ? 'active' : ''} ${isDup ? 'duplicate' : ''}" data-id="${esc(c.id)}">
+              ${esc(c.name)} (${c.rowCount})
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('startDate').addEventListener('change', e => { state.startDate = e.target.value; render(); });
+  document.getElementById('endDate').addEventListener('change', e => { state.endDate = e.target.value; render(); });
+  document.querySelectorAll('.quick button').forEach(btn => btn.addEventListener('click', () => {
+    const q = quickRanges[btn.dataset.q]; state.startDate = q.start; state.endDate = q.end; render();
+  }));
+  document.querySelectorAll('.cat-toggle').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.id;
+    if (state.excludedCategories.has(id)) state.excludedCategories.delete(id); else state.excludedCategories.add(id);
+    render();
+  }));
+}
+
+function getFilteredRows() {
+  const startMs = new Date(state.startDate).getTime();
+  const endMs = state.endDate ? new Date(state.endDate).getTime() + 86400000 : Number.MAX_SAFE_INTEGER;
+  const rows = [];
+  for (const cat of state.ownerCats) {
+    if (state.excludedCategories.has(cat.id)) continue;
+    for (const r of cat.rows) {
+      if (!r.valueDate) continue;
+      const t = new Date(r.valueDate).getTime();
+      if (t < startMs || t >= endMs) continue;
+      if (r.flagged) continue;
+      rows.push({ ...r, _cat: cat });
+    }
+  }
+  rows.sort((a, b) => (a.valueDate || '').localeCompare(b.valueDate || ''));
+  let running = 0;
+  for (const r of rows) {
+    running += (r.credit || 0) - (r.debit || 0);
+    r._running = running;
+  }
+  return rows;
+}
+
+function renderSummary() {
+  const rows = getFilteredRows();
+  const totalCredit = rows.reduce((s, r) => s + (r.credit || 0), 0);
+  const totalDebit  = rows.reduce((s, r) => s + (r.debit  || 0), 0);
+  const balance = totalCredit - totalDebit;
+  document.getElementById('summary').innerHTML = `
+    <div class="summary">
+      <div class="sc credit">
+        <div class="label">סך זכות (הזרים)</div>
+        <div class="val">${fmt(totalCredit)} ₪</div>
+        <div class="sub">${rows.filter(r => r.credit > 0).length} תנועות</div>
+      </div>
+      <div class="sc debit">
+        <div class="label">סך חובה (לקח)</div>
+        <div class="val">${fmt(totalDebit)} ₪</div>
+        <div class="sub">${rows.filter(r => r.debit > 0).length} תנועות</div>
+      </div>
+      <div class="sc big">
+        <div class="label">יתרה סופית</div>
+        <div class="val ${balance >= 0 ? 'pos' : 'neg'}">${fmtSign(balance)} ₪</div>
+        <div class="sub">${balance >= 0 ? 'החברה חייבת לבעלים' : 'הבעלים חייב לחברה'}</div>
+      </div>
+      <div class="sc">
+        <div class="label">סה"כ תנועות</div>
+        <div class="val">${rows.length.toLocaleString('he-IL')}</div>
+        <div class="sub">בטווח המסונן</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderClassBreakdown() {
+  const rows = getFilteredRows();
+  const byClass = {};
+  for (const r of rows) {
+    const cls = r.classification || 'none';
+    if (!byClass[cls]) byClass[cls] = { count: 0, credit: 0, debit: 0 };
+    byClass[cls].count++;
+    byClass[cls].credit += r.credit || 0;
+    byClass[cls].debit  += r.debit  || 0;
+  }
+
+  const order = [...ClsShared.getClassOrder(), 'none'];
+  let html = `
+    <div class="class-panel">
+      <h4>פילוח לפי סיווג שורות (מה שאישרת ידנית)</h4>
+      <div class="class-grid">
+  `;
+  for (const cls of order) {
+    const v = byClass[cls];
+    if (!v) continue;
+    const def = ClsShared.getClassDef(cls);
+    const lbl = cls === 'none' ? 'לא סווג' : (def?.he || cls);
+    const net = v.credit - v.debit;
+    const style = cls === 'none' ? 'background:#fafaf7; border-right:4px solid #ccc;' : ClsShared.classRowStyle(cls);
+    html += `
+      <div class="class-row" style="${style}">
+        <div>
+          <div class="name">${esc(lbl)}</div>
+          <div class="meta">${v.count} תנועות · זכות ${fmt(v.credit)} · חובה ${fmt(v.debit)}</div>
+        </div>
+        <div class="val">${fmtSign(net)} ₪</div>
+      </div>
+    `;
+  }
+  if (!Object.keys(byClass).length) html += `<div style="color:var(--text-3); font-size:13px">אין עדיין סיווגים. סווג שורות בטבלה למטה.</div>`;
+  html += `</div></div>`;
+  document.getElementById('classBreakdown').innerHTML = html;
+}
+
+function renderTransactions() {
+  const rows = getFilteredRows();
+  if (!rows.length) {
+    document.getElementById('txBody').innerHTML = `<tr><td colspan="8" class="empty">אין תנועות בטווח המסונן</td></tr>`;
+    return;
+  }
+  const html = rows.map(r => {
+    const cls = r.classification || '';
+    const note = r.note || '';
+    return `
+      <tr>
+        <td>${fmtDate(r.valueDate)}</td>
+        <td class="cat">${esc(r._cat.name)}</td>
+        <td class="desc">${esc(r.editedDescription || r.description || '—')}</td>
+        <td class="counter">${esc(r.counterAccount || '')}</td>
+        <td class="num debit">${r.debit > 0 ? fmt(r.debit) : ''}</td>
+        <td class="num credit">${r.credit > 0 ? fmt(r.credit) : ''}</td>
+        <td class="num balance ${r._running >= 0 ? 'pos' : 'neg'}">${fmtSign(r._running)}</td>
+        <td class="cls">${ClsShared.classSelectHtml(cls, r.id)}</td>
+        <td class="note">
+          <input type="text" data-id="${esc(r.id)}" value="${esc(note)}" placeholder="הערה (למי שיק, מטרה...)">
+        </td>
+      </tr>
+    `;
+  }).join('');
+  document.getElementById('txBody').innerHTML = html;
+
+  document.querySelectorAll('td.cls select.cls-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.id;
+      const value = sel.value || null;
+      for (const cat of state.ownerCats) {
+        const row = cat.rows.find(r => r.id === id);
+        if (row) { row.classification = value; break; }
+      }
+      sel.style.cssText = ClsShared.classSelectStyle(value);
+      try {
+        await fetch(`/api/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ classification: value }),
+        });
+        const def = ClsShared.getClassDef(value);
+        showToast(value ? `סווג: ${def?.he || ''}` : 'הוסר סיווג');
+        renderClassBreakdown();
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+
+  document.querySelectorAll('td.note input').forEach(input => {
+    input.addEventListener('blur', async () => {
+      const id = input.dataset.id;
+      const newVal = input.value;
+      let existing = null;
+      for (const cat of state.ownerCats) {
+        const row = cat.rows.find(r => r.id === id);
+        if (row) { existing = row; break; }
+      }
+      if (!existing || (existing.note || '') === newVal) return;
+      existing.note = newVal;
+      try {
+        await fetch(`/api/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ note: newVal }),
+        });
+        showToast(newVal ? 'הערה נשמרה' : 'הערה נמחקה');
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+}
+
+load();
+</script>
+</body>
+</html>

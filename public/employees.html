@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חבות עובדים — מי שולם ומי לא</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --owed: #c92a2a;
+  --paid: #2a6f45;
+  --review: #b48700;
+}
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 32px; margin: 0 0 6px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 18px; }
+h2 { font-family: 'Frank Ruhl Libre', serif; font-size: 22px; margin: 26px 0 8px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+h3 { font-size: 15px; color: #555; margin: 14px 0 8px; }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0; }
+.sc { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.sc .label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+.sc .val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sc .val.owed { color: var(--owed); }
+.sc .val.paid { color: var(--paid); }
+.sc .sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.sc.big { background: #1a1a1a; color: white; }
+.sc.big .label { color: rgba(255,255,255,.7); }
+.sc.big .val { color: #4ade80; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 6px 0 18px; background: white; border-radius: 8px; overflow: hidden; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+th { background: #efebe2; font-weight: 700; font-size: 12px; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+td.num.owed { color: var(--owed); }
+td.num.paid { color: var(--paid); }
+tr.has-debt td { background: #fff5d6; }
+tr.has-debt:hover td { background: #ffeebf; }
+
+.note { background: #fff5d6; border: 1px solid #d4a800; border-right: 4px solid #d4a800; padding: 10px 14px; border-radius: 6px; margin: 8px 0; font-size: 12px; color: #5a4500; }
+
+.controls { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+.ctrl { display: flex; flex-direction: column; gap: 4px; }
+.ctrl label { font-size: 11px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ctrl input, .ctrl select { background: white; border: 1.5px solid var(--line); border-radius: 7px; padding: 6px 10px; font-family: inherit; font-size: 13px; min-width: 140px; }
+
+.empty { padding: 30px; text-align: center; color: var(--text-3); }
+.loading { padding: 60px; text-align: center; color: var(--text-3); }
+.spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .topbar, .controls { display: none; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>חבות עובדים</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/summary.html">דוח סיכום</a>
+      <a href="/owner-account.html">חשבון בעלים</a>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">חבות עובדים — צולב מכל המקורות</h1>
+<div class="subtitle" id="subt">טוען...</div>
+
+<div id="content"><div class="loading"><div class="spinner"></div></div></div>
+
+</div>
+
+<script>
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(Math.round(n));
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(iso) { if (!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+
+async function load() {
+  const [hashRes, delRes, caseRes] = await Promise.all([
+    fetch('/api/data').then(r => r.json()),
+    fetch('/api/deliveries').then(r => r.json()),
+    fetch('/api/case').then(r => r.json()),
+  ]);
+  render(hashRes, delRes, caseRes);
+}
+
+function render(hash, del, cse) {
+  document.getElementById('subt').textContent = `מקורות: שכר עבודה רשמי · 713 חיובים מצ'אט משלוחים · ${cse.evidence.length} ראיות מזומן`;
+
+  // ============ 1. EMPLOYEES FROM DELIVERIES CHAT ============
+  // Aggregate by workerName
+  const workersFromChat = {};
+  for (const c of del.charges) {
+    const name = c.extracted?.workerName;
+    if (!name) continue;
+    if (!workersFromChat[name]) workersFromChat[name] = {
+      reportedAmount: 0, hours: 0, reportedCount: 0, firstDate: null, lastDate: null, status: c.status
+    };
+    const w = workersFromChat[name];
+    w.reportedAmount += c.effectiveAmount || 0;
+    w.hours += c.extracted?.hours || 0;
+    w.reportedCount++;
+    if (!w.firstDate || c.date < w.firstDate) w.firstDate = c.date;
+    if (!w.lastDate  || c.date > w.lastDate)  w.lastDate  = c.date;
+  }
+
+  // ============ 2. CASH MENTIONS RE: EMPLOYEES (from case file) ============
+  // Find evidence items mentioning common worker names
+  const workerNames = Object.keys(workersFromChat);
+  const cashByWorker = {};
+  for (const ev of cse.evidence) {
+    const body = ev.body || '';
+    for (const name of workerNames) {
+      if (body.includes(name)) {
+        if (!cashByWorker[name]) cashByWorker[name] = { count: 0, amount: 0 };
+        cashByWorker[name].count++;
+        for (const a of ev.amounts || []) cashByWorker[name].amount += a.amount;
+      }
+    }
+  }
+
+  // ============ 3. SALARY CATEGORY TOTALS (official books) ============
+  const SALARY_CATS = hash.categories.filter(c => /שכר עבודה|משכורת/.test(c.name));
+  let totalSalaryExpense = 0, totalSalaryRows = 0;
+  for (const cat of SALARY_CATS) {
+    for (const r of cat.rows) {
+      totalSalaryExpense += (r.debit || 0) - (r.credit || 0);
+      totalSalaryRows++;
+    }
+  }
+
+  // ============ 4. ALL COUNTER ACCOUNTS WITH NON-ZERO BALANCE ACROSS ALL CATS ============
+  // Show "open accounts" — counter accounts where we owe money or are owed
+  const openByCounter = {};
+  for (const cat of hash.categories) {
+    for (const r of cat.rows) {
+      const counter = (r.counterAccount || '').trim();
+      if (!counter) continue;
+      // skip generic accounts
+      if (/^כרטיס כללי|^בנק|^קופה|^ביטול יתרות|^המחאה|^ניכוי|^הוצאות/.test(counter)) continue;
+      if (!openByCounter[counter]) openByCounter[counter] = { credit: 0, debit: 0, count: 0, lastDate: null, cats: new Set() };
+      const o = openByCounter[counter];
+      o.credit += r.credit || 0;
+      o.debit  += r.debit  || 0;
+      o.count++;
+      if (!o.lastDate || r.valueDate > o.lastDate) o.lastDate = r.valueDate;
+      o.cats.add(cat.name);
+    }
+  }
+  // Filter to those with material balance (> 100 ₪)
+  const openAccounts = Object.entries(openByCounter)
+    .filter(([_, v]) => Math.abs(v.credit - v.debit) > 100)
+    .sort((a,b) => Math.abs(b[1].credit - b[1].debit) - Math.abs(a[1].credit - a[1].debit));
+
+  // ============ TOTALS ============
+  const totalReported = Object.values(workersFromChat).reduce((s, w) => s + w.reportedAmount, 0);
+  const totalCash     = Object.values(cashByWorker).reduce((s, w) => s + w.amount, 0);
+
+  let html = `
+    <h2>1 · עובדים מהצ'אט (דיווחי מני / מוטי בק)</h2>
+    <div class="note">
+      ❗ <strong>חשוב:</strong> זה לא הוכחת תשלום. מני דיווח שיש לתת לעובד X — שאלה אם זה אכן שולם בפועל היא נפרדת. מצליב עם הספרים בהמשך.
+    </div>
+
+    <div class="summary">
+      <div class="sc">
+        <div class="label">סך עובדים מוזכרים</div>
+        <div class="val">${Object.keys(workersFromChat).length}</div>
+      </div>
+      <div class="sc">
+        <div class="label">סך דיווח שעות/כסף</div>
+        <div class="val owed">${fmt(totalReported)} ₪</div>
+      </div>
+      <div class="sc">
+        <div class="label">אזכורי מזומן בצ'אטים</div>
+        <div class="val owed">${fmt(totalCash)} ₪</div>
+      </div>
+      <div class="sc">
+        <div class="label">סך שכר רשמי (ספרים)</div>
+        <div class="val paid">${fmt(totalSalaryExpense)} ₪</div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr>
+        <th>עובד</th>
+        <th>דיווחים בצ'אט</th>
+        <th>סך שעות</th>
+        <th>סכום שדווח</th>
+        <th>אזכורי מזומן</th>
+        <th>סך מזומן הוזכר</th>
+        <th>תקופה</th>
+      </tr></thead>
+      <tbody>
+        ${Object.entries(workersFromChat).sort((a,b) => b[1].reportedAmount - a[1].reportedAmount).map(([name, w]) => {
+          const cash = cashByWorker[name];
+          return `<tr>
+            <td><strong>${esc(name)}</strong></td>
+            <td>${w.reportedCount}</td>
+            <td class="num">${w.hours ? w.hours.toFixed(1) : '—'}</td>
+            <td class="num owed">${fmt(w.reportedAmount)} ₪</td>
+            <td>${cash ? cash.count : '—'}</td>
+            <td class="num owed">${cash ? fmt(cash.amount) : '—'} ${cash ? '₪' : ''}</td>
+            <td style="font-size:11px; color:#777">${w.firstDate ? fmtDate(w.firstDate) : ''} → ${w.lastDate ? fmtDate(w.lastDate) : ''}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <h2>2 · חשבונות פתוחים בספרים (יתרה מהותית)</h2>
+    <div class="note">
+      ⚠ זוהי רשימת חשבונות נגדיים בכל קבצי הספרים שיתרת השוטף שלהם > 100 ₪ במוחלט.
+      <strong>חיובי</strong> = החברה חייבת להם. <strong>שלילי</strong> = הם חייבים לחברה.
+      התסנן אוטומטית חשבונות מערכת (בנק, קופה, כרטיס כללי, וכו') כי הם חוצי-יתרה.
+    </div>
+
+    <div class="controls">
+      <div class="ctrl">
+        <label>חיפוש</label>
+        <input type="text" id="searchAcc" placeholder="הקלד כדי לסנן (לפי שם)..." style="min-width:240px">
+      </div>
+      <div class="ctrl">
+        <label>מציג</label>
+        <select id="filterOpen">
+          <option value="all">כל החשבונות הפתוחים</option>
+          <option value="owed">רק שהחברה חייבת (יתרת זכות)</option>
+          <option value="receivable">רק שחייבים לחברה (יתרת חובה)</option>
+        </select>
+      </div>
+    </div>
+
+    <table id="openTable">
+      <thead><tr>
+        <th>חשבון נגדי</th>
+        <th>תנועות</th>
+        <th>זכות (חויב/שולם להם)</th>
+        <th>חובה (קיבלנו מהם)</th>
+        <th>יתרה</th>
+        <th>תאריך אחרון</th>
+        <th>קבצים</th>
+      </tr></thead>
+      <tbody id="openBody"></tbody>
+    </table>
+
+    <h2>3 · השוואת שכר רשמי לאזכורים מהצ'אט</h2>
+    <table>
+      <tr><td>סך הוצאות שכר רשמיות (כל השנים)</td><td class="num paid">${fmt(totalSalaryExpense)} ₪</td></tr>
+      <tr><td>שורות שכר רשמיות (מספר)</td><td class="num">${totalSalaryRows.toLocaleString('he-IL')}</td></tr>
+      <tr><td>דיווחים מצ'אט (עובדים)</td><td class="num owed">${fmt(totalReported)} ₪</td></tr>
+      <tr><td>פער (רשמי − דיווח צ'אט)</td><td class="num">${fmt(totalSalaryExpense - totalReported)} ₪</td></tr>
+    </table>
+
+    <div class="note">
+      <strong>פירוש הפער:</strong>
+      פער חיובי גדול → כנראה שהשכר ברובו רשום (וזה טוב). פער שלילי → דיווחים מהצ'אט גדולים מהרשום, יתכן שתשלום מזומן לא נכנס לספרים.
+      רק לאחר סיווג השורות הספציפיות אפשר לבסס מסקנה.
+    </div>
+  `;
+
+  document.getElementById('content').innerHTML = html;
+
+  // Render open accounts (with filtering)
+  function renderOpenAccounts() {
+    const q = document.getElementById('searchAcc').value.trim();
+    const filter = document.getElementById('filterOpen').value;
+    const items = openAccounts.filter(([name, v]) => {
+      const bal = v.credit - v.debit;
+      if (q && !name.includes(q)) return false;
+      if (filter === 'owed' && bal <= 0) return false;
+      if (filter === 'receivable' && bal >= 0) return false;
+      return true;
+    });
+    const tbody = document.getElementById('openBody');
+    if (!items.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty">אין חשבונות בסינון זה</td></tr>`; return; }
+    tbody.innerHTML = items.slice(0, 200).map(([name, v]) => {
+      const bal = v.credit - v.debit;
+      const cats = [...v.cats].slice(0, 3).join(', ');
+      return `<tr class="${Math.abs(bal) > 1000 ? 'has-debt' : ''}">
+        <td><strong>${esc(name)}</strong></td>
+        <td>${v.count}</td>
+        <td class="num owed">${fmt(v.credit)}</td>
+        <td class="num paid">${fmt(v.debit)}</td>
+        <td class="num" style="color:${bal >= 0 ? 'var(--owed)' : 'var(--paid)'}">${bal >= 0 ? '+' : ''}${fmt(bal)} ₪</td>
+        <td style="font-size:11px; color:#777">${v.lastDate ? fmtDate(v.lastDate) : ''}</td>
+        <td style="font-size:11px; color:#777">${esc(cats)}</td>
+      </tr>`;
+    }).join('') + (items.length > 200 ? `<tr><td colspan="7" class="empty">מציג 200 הראשונים מתוך ${items.length}</td></tr>` : '');
+  }
+  document.getElementById('searchAcc').addEventListener('input', renderOpenAccounts);
+  document.getElementById('filterOpen').addEventListener('change', renderOpenAccounts);
+  renderOpenAccounts();
+}
+
+load();
+</script>
+</body>
+</html>

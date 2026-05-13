@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חיובי משלוחים — מתוך וואטסאפ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --pending:   #b48700;
+  --confirmed: #2a6f45;
+  --disputed:  #c92a2a;
+  --duplicate: #6b6b6b;
+  --excluded:  #6b6b6b;
+}
+
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.5; }
+.container { max-width: 1180px; margin: 0 auto; padding: 20px; }
+h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 30px; margin: 0 0 4px; letter-spacing: -.02em; }
+h2 { font-family: 'Frank Ruhl Libre', serif; font-size: 22px; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1180px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+.totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0; }
+.tc { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.tc .label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+.tc .val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tc .sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.tc.big { background: #1a1a1a; color: white; }
+.tc.big .label { color: rgba(255,255,255,.7); }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 6px 0 18px; background: white; border-radius: 8px; overflow: hidden; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: right; }
+th { background: #efebe2; font-weight: 700; font-size: 12px; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 6px; align-items: center; }
+.chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: white; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.chip:hover { background: #f0ede2; }
+.chip.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+.chip .badge { display: inline-block; background: rgba(0,0,0,.1); padding: 1px 7px; border-radius: 999px; font-size: 11px; margin-inline-start: 4px; font-weight: 700; }
+.chip.active .badge { background: rgba(255,255,255,.2); }
+
+select.filter-sel { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.charge {
+  background: white; border: 1px solid var(--line); border-right: 4px solid var(--line);
+  border-radius: 10px; margin: 8px 0; padding: 12px 14px; transition: border-color .2s;
+}
+.charge[data-status="confirmed"] { border-right-color: var(--confirmed); }
+.charge[data-status="disputed"]  { border-right-color: var(--disputed); }
+.charge[data-status="duplicate"] { border-right-color: var(--duplicate); opacity: .55; }
+.charge[data-status="excluded"]  { border-right-color: var(--excluded); opacity: .45; }
+.charge[data-status="pending"]   { border-right-color: var(--pending); }
+
+.ch-header { display: grid; grid-template-columns: 110px auto 1fr auto auto; gap: 12px; align-items: center; font-size: 13px; }
+.ch-date { font-weight: 700; }
+.ch-date .time { color: var(--text-3); font-weight: 500; font-size: 11px; margin-inline-start: 4px; }
+.ch-speaker { background: #f0ede2; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; }
+.ch-type-badge { background: #ddecdb; color: #2a6f45; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+.ch-type-badge[data-t="delivery"]       { background: #d6e7f5; color: #1c4f7c; }
+.ch-type-badge[data-t="employee_hours"] { background: #f0e0c8; color: #7a4d10; }
+.ch-type-badge[data-t="hours"]          { background: #f0e0c8; color: #7a4d10; }
+.ch-type-badge[data-t="purchase"]       { background: #f3d8d8; color: #8c2c2c; }
+.ch-type-badge[data-t="other"]          { background: #ececec; color: #555; }
+
+.ch-amount-edit { display: flex; align-items: center; gap: 4px; }
+.amount-input { width: 90px; background: white; border: 1.5px solid var(--line); border-radius: 6px; padding: 5px 8px; font-family: inherit; font-size: 14px; font-weight: 700; text-align: end; font-variant-numeric: tabular-nums; color: var(--text); }
+.amount-input:focus { outline: none; border-color: var(--text); }
+.amount-input.modified { border-color: var(--pending); background: #fff8dc; }
+.ch-amount-suffix { font-weight: 700; color: var(--text-2); }
+.ch-amount-orig { font-size: 11px; color: var(--text-3); text-align: end; }
+.ch-amount-orig.show { text-decoration: line-through; }
+
+.ch-body {
+  background: #f8f6ef; padding: 9px 12px; margin: 8px 0 6px;
+  border-right: 3px solid #ccc; border-radius: 4px; font-size: 13px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.ch-meta { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0; font-size: 11px; }
+.ch-meta .pill { background: #f0ede2; color: var(--text-2); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+
+.ch-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+.s-btn { background: white; border: 1.5px solid var(--line); color: var(--text-2); font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 7px; cursor: pointer; }
+.s-btn:hover { background: #f5f3eb; }
+.s-btn.active.pending    { background: var(--pending);    color: white; border-color: var(--pending); }
+.s-btn.active.confirmed  { background: var(--confirmed);  color: white; border-color: var(--confirmed); }
+.s-btn.active.disputed   { background: var(--disputed);   color: white; border-color: var(--disputed); }
+.s-btn.active.duplicate  { background: var(--duplicate);  color: white; border-color: var(--duplicate); }
+.s-btn.active.excluded   { background: var(--excluded);   color: white; border-color: var(--excluded); }
+
+select.type-sel { background: white; border: 1.5px solid var(--line); border-radius: 7px; padding: 5px 8px; font-family: inherit; font-size: 12px; font-weight: 600; }
+.note-input { flex: 1; min-width: 140px; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; font: inherit; font-size: 12px; color: var(--text); }
+.note-input:focus { outline: none; border-color: var(--text); }
+
+.empty, .loading { padding: 40px; text-align: center; color: var(--text-3); }
+.toast { position: fixed; bottom: 24px; inset-inline: 24px; max-width: 360px; margin: 0 auto; background: #1a1a1a; color: white; font-size: 13px; padding: 11px 16px; border-radius: 8px; z-index: 100; text-align: center; transition: opacity .2s, transform .2s; opacity: 0; transform: translateY(10px); pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media print {
+  body { background: white; }
+  .topbar, .controls, .ch-actions, .toast { display: none !important; }
+  .charge[data-status="duplicate"], .charge[data-status="excluded"], .charge[data-status="pending"] { display: none; }
+  .container { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>חיובי משלוחים — מתוך וואטסאפ</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/case-file.html">תיק ראיות מזומן</a>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<div id="summary"><div class="loading">טוען...</div></div>
+
+<h2>סינון</h2>
+<div class="controls">
+  <div class="chip-group" id="typeFilter"></div>
+  <select id="monthFilter" class="filter-sel"></select>
+  <select id="speakerFilter" class="filter-sel"></select>
+  <select id="statusFilter" class="filter-sel"></select>
+</div>
+
+<h2>חיובים</h2>
+<div id="chargeList"></div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const TYPE_DEFS = {
+  delivery:       { he: 'משלוח' },
+  employee_hours: { he: 'שעות עובד' },
+  hours:          { he: 'שעות' },
+  purchase:       { he: 'רכישה' },
+  other:          { he: 'אחר' },
+};
+const TYPE_ORDER = ['delivery','employee_hours','hours','purchase','other'];
+
+const STATUS_DEFS = {
+  pending:    { he: 'בהמתנה',   icon: '⏳' },
+  confirmed:  { he: 'אושר',     icon: '✓' },
+  disputed:   { he: 'במחלוקת', icon: '⚠' },
+  duplicate:  { he: 'כפילות',   icon: '×' },
+  excluded:   { he: 'הוחרג',     icon: '✕' },
+};
+const STATUS_ORDER = ['pending','confirmed','disputed','duplicate','excluded'];
+
+const state = {
+  data: null,
+  filterType: 'all',
+  filterMonth: 'all',
+  filterSpeaker: 'all',
+  filterStatus: 'all',
+};
+
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 }).format(Math.round((n + Number.EPSILON) * 100) / 100);
+const fmtDate = iso => { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timeout); t._timeout = setTimeout(()=> t.classList.remove('show'), 1700);
+}
+
+async function load() {
+  const r = await fetch('/api/deliveries');
+  state.data = await r.json();
+  render();
+}
+function render() {
+  renderSummary(); renderFilters(); renderList();
+}
+
+function renderSummary() {
+  const live = state.data.live;
+  let html = `
+    <h2>סיכום חי</h2>
+    <div class="totals">
+      <div class="tc big">
+        <div class="label">סה"כ חיובים (פעילים)</div>
+        <div class="val">${fmt(live.totalAmount)} ₪</div>
+        <div class="sub">${live.totalCount.toLocaleString('he-IL')} פריטים</div>
+      </div>
+      ${TYPE_ORDER.filter(t => live.byType[t]).map(t => `
+        <div class="tc">
+          <div class="label">${TYPE_DEFS[t].he}</div>
+          <div class="val">${fmt(live.byType[t])} ₪</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <h2>פילוח לפי חודש</h2>
+    <table>
+      <thead><tr><th>חודש</th><th>סכום</th></tr></thead>
+      <tbody>
+        ${Object.entries(live.byMonth).sort().map(([mo, v]) => `
+          <tr><td>${mo}</td><td class="num">${fmt(v)} ₪</td></tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <h2>פילוח לפי עיר (משלוחים)</h2>
+    <table>
+      <thead><tr><th>עיר</th><th>סכום</th></tr></thead>
+      <tbody>
+        ${Object.entries(live.byCity).sort((a,b)=>b[1]-a[1]).map(([c, v]) => `
+          <tr><td>${esc(c)}</td><td class="num">${fmt(v)} ₪</td></tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    ${Object.keys(live.byWorker).length ? `
+      <h2>פילוח לפי עובד</h2>
+      <table>
+        <thead><tr><th>עובד</th><th>סכום</th></tr></thead>
+        <tbody>
+          ${Object.entries(live.byWorker).sort((a,b)=>b[1]-a[1]).map(([w, v]) => `
+            <tr><td>${esc(w)}</td><td class="num">${fmt(v)} ₪</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : ''}
+
+    <h2>פילוח לפי דובר</h2>
+    <table>
+      <thead><tr><th>דובר</th><th>סכום</th></tr></thead>
+      <tbody>
+        ${Object.entries(live.byDriver).sort((a,b)=>b[1]-a[1]).map(([s, v]) => `
+          <tr><td>${esc(s)}</td><td class="num">${fmt(v)} ₪</td></tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  document.getElementById('summary').innerHTML = html;
+}
+
+function renderFilters() {
+  // Type chips
+  const counts = { all: state.data.charges.length };
+  for (const t of TYPE_ORDER) counts[t] = state.data.charges.filter(c => c.userType === t).length;
+  const tf = document.getElementById('typeFilter');
+  tf.innerHTML = `
+    <button class="chip ${state.filterType === 'all' ? 'active' : ''}" data-f="all">הכל <span class="badge">${counts.all}</span></button>
+    ${TYPE_ORDER.map(t => `
+      <button class="chip ${state.filterType === t ? 'active' : ''}" data-f="${t}">${TYPE_DEFS[t].he} <span class="badge">${counts[t]}</span></button>
+    `).join('')}
+  `;
+  tf.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { state.filterType = c.dataset.f; render(); }));
+
+  // Month
+  const months = [...new Set(state.data.charges.map(c => c.date.slice(0,7)))].sort();
+  const mf = document.getElementById('monthFilter');
+  mf.innerHTML = `<option value="all">כל החודשים</option>` + months.map(m => `<option value="${m}" ${state.filterMonth===m?'selected':''}>${m}</option>`).join('');
+  mf.onchange = () => { state.filterMonth = mf.value; render(); };
+
+  // Speaker
+  const speakers = [...new Set(state.data.charges.map(c => c.speaker))].sort();
+  const sf = document.getElementById('speakerFilter');
+  sf.innerHTML = `<option value="all">כל הדוברים</option>` + speakers.map(s => `<option value="${esc(s)}" ${state.filterSpeaker===s?'selected':''}>${esc(s)}</option>`).join('');
+  sf.onchange = () => { state.filterSpeaker = sf.value; render(); };
+
+  // Status
+  const stf = document.getElementById('statusFilter');
+  stf.innerHTML = `<option value="all">כל הסטטוסים</option>` + STATUS_ORDER.map(s => `<option value="${s}" ${state.filterStatus===s?'selected':''}>${STATUS_DEFS[s].he}</option>`).join('');
+  stf.onchange = () => { state.filterStatus = stf.value; render(); };
+}
+
+function renderList() {
+  const items = state.data.charges.filter(c => {
+    if (state.filterType    !== 'all' && c.userType !== state.filterType) return false;
+    if (state.filterMonth   !== 'all' && c.date.slice(0,7) !== state.filterMonth) return false;
+    if (state.filterSpeaker !== 'all' && c.speaker !== state.filterSpeaker) return false;
+    if (state.filterStatus  !== 'all' && c.status !== state.filterStatus) return false;
+    return true;
+  }).sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+
+  if (!items.length) {
+    document.getElementById('chargeList').innerHTML = '<div class="empty">אין חיובים בסינון זה</div>';
+    return;
+  }
+
+  const html = items.map(c => {
+    const meta = [];
+    for (const city of c.extracted.cities) meta.push(`<span class="pill">📍 ${esc(city.name)}${city.count ? ' · ' + city.count : ''}</span>`);
+    if (c.extracted.stations) meta.push(`<span class="pill">${c.extracted.stations} משלוחים</span>`);
+    if (c.extracted.hours)    meta.push(`<span class="pill">⏱ ${c.extracted.hours} שעות</span>`);
+    if (c.extracted.km)       meta.push(`<span class="pill">🚗 ${c.extracted.km} ק"מ</span>`);
+    if (c.extracted.workerName) meta.push(`<span class="pill">👤 ${esc(c.extracted.workerName)}</span>`);
+    if (c.extracted.vendor)     meta.push(`<span class="pill">🏪 ${esc(c.extracted.vendor)}</span>`);
+
+    const isModified = c.userAmount !== null && c.userAmount !== c.extracted.amount;
+    const statusButtons = STATUS_ORDER.map(s => `
+      <button class="s-btn ${s} ${c.status===s?'active':''}" data-id="${esc(c.id)}" data-status="${s}">
+        ${STATUS_DEFS[s].icon} ${STATUS_DEFS[s].he}
+      </button>
+    `).join('');
+
+    return `
+      <div class="charge" data-status="${c.status}" data-id="${esc(c.id)}">
+        <div class="ch-header">
+          <div class="ch-date">${fmtDate(c.date)}<span class="time">${c.time}</span></div>
+          <div class="ch-speaker">${esc(c.speaker)}</div>
+          <div>
+            <select class="type-sel" data-id="${esc(c.id)}">
+              ${TYPE_ORDER.map(t => `<option value="${t}" ${c.userType===t?'selected':''}>${TYPE_DEFS[t].he}</option>`).join('')}
+            </select>
+          </div>
+          <div class="ch-amount-edit">
+            <input class="amount-input ${isModified?'modified':''}" data-id="${esc(c.id)}" type="number" step="0.5" value="${c.effectiveAmount}" />
+            <span class="ch-amount-suffix">₪</span>
+          </div>
+          <div class="ch-amount-orig ${isModified?'show':''}">${isModified ? 'מקור: ' + fmt(c.extracted.amount || 0) : ''}</div>
+        </div>
+        ${meta.length ? `<div class="ch-meta">${meta.join('')}</div>` : ''}
+        <div class="ch-body">${esc(c.rawBody)}</div>
+        <div class="ch-actions">
+          ${statusButtons}
+          <input class="note-input" data-id="${esc(c.id)}" placeholder="הערה..." value="${esc(c.userNote || '')}">
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('chargeList').innerHTML = html;
+
+  // Status buttons
+  document.querySelectorAll('.s-btn').forEach(b => {
+    b.addEventListener('click', async () => {
+      const id = b.dataset.id; const status = b.dataset.status;
+      const c = state.data.charges.find(x => x.id === id); if (!c) return;
+      c.status = status; render();
+      try { await put(id, { status }); showToast(`סומן: ${STATUS_DEFS[status].he}`); }
+      catch(e) { showToast('שגיאה'); }
+    });
+  });
+
+  // Amount edit
+  document.querySelectorAll('.amount-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const id = input.dataset.id;
+      const c = state.data.charges.find(x => x.id === id); if (!c) return;
+      const newVal = input.value === '' ? null : parseFloat(input.value);
+      c.userAmount = newVal;
+      c.effectiveAmount = newVal !== null ? newVal : (c.extracted.amount || 0);
+      render();
+      try { await put(id, { amount: newVal }); showToast('סכום עודכן'); }
+      catch(e) { showToast('שגיאה'); }
+    });
+  });
+
+  // Type change
+  document.querySelectorAll('.type-sel').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.id; const c = state.data.charges.find(x => x.id === id); if (!c) return;
+      c.userType = sel.value; render();
+      try { await put(id, { type: sel.value }); showToast(`סוג: ${TYPE_DEFS[sel.value].he}`); }
+      catch(e) { showToast('שגיאה'); }
+    });
+  });
+
+  // Note
+  document.querySelectorAll('.note-input').forEach(input => {
+    input.addEventListener('blur', async () => {
+      const id = input.dataset.id; const c = state.data.charges.find(x => x.id === id); if (!c) return;
+      if ((c.userNote || '') === input.value) return;
+      c.userNote = input.value;
+      try { await put(id, { note: input.value }); showToast('הערה נשמרה'); }
+      catch(e) { showToast('שגיאה'); }
+    });
+  });
+}
+
+async function put(id, body) {
+  const r = await fetch(`/api/deliveries/${encodeURIComponent(id)}`, {
+    method: 'PUT', headers: {'content-type':'application/json'}, body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`${r.status}`);
+  // Re-fetch totals
+  const r2 = await fetch('/api/deliveries');
+  state.data = await r2.json();
+  renderSummary();
+  return r.json();
+}
+
+load();
+</script>
+</body>
+</html>

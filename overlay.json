@@ -1,0 +1,78 @@
+{
+  "rows": {
+    "הכנסות_20-1.22::5": {
+      "note": "",
+      "editedDescription": null
+    },
+    "בעלים::0": {
+      "classification": null
+    },
+    "בעלים_-_ארנטל::6": {
+      "classification": "yoel_debt"
+    },
+    "בעלים_-_ארנטל::1": {
+      "classification": "yoel_debt",
+      "entity": null
+    },
+    "בעלים_-_ארנטל::0": {
+      "entity": null
+    },
+    "הלוואה_-_גמח_בעלים::3": {
+      "classification": null,
+      "entity": null
+    },
+    "הלוואה_-_גמח_בעלים::4": {
+      "classification": null,
+      "entity": null
+    },
+    "בעלים_-_ארנטל::2": {
+      "classification": "yoel_debt"
+    },
+    "בעלים_-_ארנטל::3": {
+      "classification": "yoel_debt"
+    },
+    "בעלים_-_ארנטל::4": {
+      "classification": "yoel_debt"
+    },
+    "בעלים_-_ארנטל::9": {
+      "classification": "yoel_debt"
+    },
+    "בעלים_-_ארנטל::10": {
+      "classification": "yoel_debt"
+    },
+    "הלוואה_-_גמח_בעלים::13": {
+      "classification": "moti_debt"
+    },
+    "הלוואה_-_גמח_בעלים::14": {
+      "classification": "moti_debt"
+    },
+    "הלוואה_-_גמח_בעלים::15": {
+      "classification": "moti_debt"
+    },
+    "הלוואה_-_גמח_בעלים::16": {
+      "classification": "moti_debt"
+    },
+    "הלוואה_-_גמח_בעלים::17": {
+      "classification": "moti_debt"
+    },
+    "הלוואה_-_גמח_בעלים::18": {
+      "classification": "moti_debt"
+    },
+    "הלוואה_-_גמח_בעלים::19": {
+      "classification": "moti_debt"
+    },
+    "הלוואות_בעלים::1": {
+      "classification": "yoel_debt"
+    },
+    "הלוואה_-_גמח_בעלים::20": {
+      "classification": "moti_debt"
+    },
+    "הלוואות_בעלים::11": {
+      "classification": "yoel_debt"
+    },
+    "חוז_חוצות::0": {
+      "note": ""
+    }
+  },
+  "categories": {}
+}

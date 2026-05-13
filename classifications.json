@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "yoel_debt",
+      "he": "יואל הזרים",
+      "color": "#2bc7ca"
+    },
+    {
+      "id": "moti_debt",
+      "he": "חוב מוטי פרטי",
+      "color": "#1c4f7c"
+    },
+    {
+      "id": "company_debt",
+      "he": "חוב חברה",
+      "color": "#6b6b6b"
+    },
+    {
+      "id": "yoel_related",
+      "he": "חוצות",
+      "color": "#2a6f45"
+    },
+    {
+      "id": "cl_0nlngt1",
+      "he": "אופטיקינג",
+      "color": "#1c4f7c"
+    },
+    {
+      "id": "cl_hs0jkh3",
+      "he": "שערים",
+      "color": "#1c4f7c"
+    }
+  ]
+}

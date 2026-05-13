@@ -1,0 +1,5 @@
+node_modules/
+*.log
+tunnel.log
+bin/cloudflared.exe
+.DS_Store

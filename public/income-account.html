@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הכנסות — סיווג שורות</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --credit:  #2a6f45;
+  --debit:   #c92a2a;
+  --c1: #c92a2a;
+  --c2: #1c4f7c;
+  --c3: #6b6b6b;
+  --c4: #7a4d10;
+  --c5: #2a6f45;
+}
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 32px; margin: 0 0 6px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 18px; }
+h3 { font-size: 16px; color: var(--text); margin: 20px 0 8px; }
+
+.controls {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: end;
+}
+.ctrl { display: flex; flex-direction: column; gap: 4px; }
+.ctrl label { font-size: 11px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ctrl input, .ctrl select { background: white; border: 1.5px solid var(--line); border-radius: 7px; padding: 6px 10px; font-family: inherit; font-size: 13px; min-width: 140px; }
+.ctrl input:focus, .ctrl select:focus { outline: none; border-color: var(--text); }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0; }
+.sc { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.sc .label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+.sc .val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--credit); }
+.sc .sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.sc.big { background: #1a1a1a; color: white; }
+.sc.big .label { color: rgba(255,255,255,.7); }
+.sc.big .val { color: #4ade80; }
+
+.class-panel { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+.class-panel h4 { margin: 0 0 8px; font-size: 14px; }
+.class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; font-size: 12px; }
+.class-row { display: flex; justify-content: space-between; padding: 6px 10px; border-radius: 6px; border-right: 4px solid; align-items: center; gap: 10px; }
+.class-row .name { font-weight: 600; }
+.class-row .val { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.class-row .meta { font-size: 11px; color: var(--text-3); }
+.class-row.c-yoel_debt    { background: #fce4e4; border-color: var(--c1); }
+.class-row.c-moti_debt    { background: #d6e7f5; border-color: var(--c2); }
+.class-row.c-company_debt { background: #ececec; border-color: var(--c3); }
+.class-row.c-moti_private { background: #f0e0c8; border-color: var(--c4); }
+.class-row.c-yoel_related { background: #ddecdb; border-color: var(--c5); }
+.class-row.c-none         { background: #fafaf7; border-color: #ccc; }
+
+.tx-table { background: white; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+th { background: #efebe2; padding: 8px 10px; text-align: right; font-weight: 700; font-size: 11px; position: sticky; top: 0; z-index: 5; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+td.credit { color: var(--credit); font-weight: 700; }
+td.debit  { color: var(--debit); }
+td.cat { font-size: 10px; color: var(--text-3); }
+td.desc { max-width: 280px; word-break: break-word; }
+td.counter { font-size: 11px; color: var(--text-2); max-width: 200px; word-break: break-word; }
+td.cls select {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 160px;
+  max-width: 220px;
+}
+td.note input {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: text;
+  min-width: 160px;
+  max-width: 280px;
+  color: var(--text);
+}
+td.note input:focus { outline: none; border-color: var(--text); }
+td.note input:not(:placeholder-shown) { background: #fff8dc; border-color: #d4a800; font-weight: 600; }
+/* Classification select colors come from inline style — classifications-shared.js */
+
+tbody tr:hover td { background: #f8f6ef; }
+
+.pagination { display: flex; gap: 6px; justify-content: center; align-items: center; padding: 14px 0; }
+.pagination button { background: white; border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; }
+.pagination button:hover { background: #f0ede2; }
+.pagination button:disabled { opacity: .4; cursor: default; }
+.pagination .page-info { font-size: 12px; color: var(--text-3); padding: 0 12px; }
+
+.empty { padding: 30px; text-align: center; color: var(--text-3); }
+.loading { padding: 60px; text-align: center; color: var(--text-3); }
+.spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast { position: fixed; bottom: 24px; inset-inline: 24px; max-width: 320px; margin: 0 auto; background: #1a1a1a; color: white; font-size: 13px; padding: 11px 16px; border-radius: 8px; z-index: 100; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; transform: translateY(10px); pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media print { .topbar, .controls, .pagination, td.cls { display: none; } body { background: white; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>הכנסות — סיווג שורות</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/owner-account.html">חשבון בעלים</a>
+      <a href="/summary.html">דוח סיכום</a>
+      <button id="manageClasses">⚙ סיווגים</button>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">הכנסות — סיווג שורות</h1>
+<div class="subtitle" id="subt">טוען...</div>
+
+<div id="controls"></div>
+<div id="summary"></div>
+<div id="classBreakdown"></div>
+
+<h3>תנועות הכנסה — סווג + הוסף הערה לכל שורה</h3>
+<div class="tx-table">
+  <table>
+    <thead><tr>
+      <th>תאריך</th>
+      <th>קובץ</th>
+      <th>תיאור</th>
+      <th>חשבון נגדי</th>
+      <th>חובה</th>
+      <th>זכות</th>
+      <th>סיווג</th>
+      <th>הערה</th>
+    </tr></thead>
+    <tbody id="txBody"><tr><td colspan="8" class="loading"><div class="spinner"></div></td></tr></tbody>
+  </table>
+</div>
+
+<div class="pagination" id="pagination"></div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="/classifications-shared.js"></script>
+<script>
+
+const state = {
+  data: null,
+  incomeCats: [],
+  startDate: '2021-08-01',
+  endDate: null,
+  selectedFile: 'all',
+  selectedCounter: 'all',
+  classStatus: 'all', // 'all' | 'classified' | 'unclassified'
+  minAmount: 0,
+  sortBy: 'date', // 'date' | 'amount'
+  page: 0,
+  pageSize: 200,
+};
+
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 }).format(Math.round((n + Number.EPSILON) * 100) / 100);
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
+const fmtDate = iso => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timeout); t._timeout = setTimeout(()=> t.classList.remove('show'), 1700);
+}
+
+async function load() {
+  await ClsShared.loadClassifications();
+  const r = await fetch('/api/data');
+  state.data = await r.json();
+  state.incomeCats = state.data.categories.filter(c => c.section === 'income');
+  document.getElementById('manageClasses').addEventListener('click', () => {
+    ClsShared.openClassModal(() => render());
+  });
+  render();
+}
+
+function render() {
+  const totalRows = state.incomeCats.reduce((s, c) => s + c.rowCount, 0);
+  document.getElementById('subt').textContent = `${state.incomeCats.length} קבצי הכנסה · ${totalRows.toLocaleString('he-IL')} תנועות סה"כ`;
+  renderControls();
+  const all = getFilteredRows();
+  renderSummary(all);
+  renderClassBreakdown(all);
+  renderTransactions(all);
+}
+
+function renderControls() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Top counter accounts for the dropdown
+  const counterCounts = {};
+  for (const c of state.incomeCats) {
+    for (const r of c.rows) {
+      const ca = (r.counterAccount || '').trim();
+      if (!ca) continue;
+      counterCounts[ca] = (counterCounts[ca] || 0) + 1;
+    }
+  }
+  const topCounters = Object.entries(counterCounts).sort((a,b) => b[1] - a[1]).slice(0, 30);
+
+  document.getElementById('controls').innerHTML = `
+    <div class="controls">
+      <div class="ctrl">
+        <label>מתאריך</label>
+        <input type="date" id="startDate" value="${state.startDate}">
+      </div>
+      <div class="ctrl">
+        <label>עד תאריך</label>
+        <input type="date" id="endDate" value="${state.endDate || today}">
+      </div>
+      <div class="ctrl">
+        <label>קובץ</label>
+        <select id="fileSel">
+          <option value="all">כל קבצי ההכנסה</option>
+          ${state.incomeCats.map(c => `<option value="${esc(c.id)}" ${state.selectedFile === c.id ? 'selected' : ''}>${esc(c.name)} (${c.rowCount})</option>`).join('')}
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>חשבון נגדי</label>
+        <select id="counterSel">
+          <option value="all">כולם</option>
+          ${topCounters.map(([c, n]) => `<option value="${esc(c)}" ${state.selectedCounter === c ? 'selected' : ''}>${esc(c)} (${n})</option>`).join('')}
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>סכום מינ׳</label>
+        <input type="number" id="minAmount" value="${state.minAmount}" step="100" min="0" style="min-width:100px">
+      </div>
+      <div class="ctrl">
+        <label>סטטוס סיווג</label>
+        <select id="classStatus">
+          <option value="all" ${state.classStatus === 'all' ? 'selected' : ''}>הכל</option>
+          <option value="unclassified" ${state.classStatus === 'unclassified' ? 'selected' : ''}>רק לא מסווגים</option>
+          <option value="classified" ${state.classStatus === 'classified' ? 'selected' : ''}>רק מסווגים</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>מיון</label>
+        <select id="sortBy">
+          <option value="date" ${state.sortBy === 'date' ? 'selected' : ''}>תאריך (ישן→חדש)</option>
+          <option value="amount" ${state.sortBy === 'amount' ? 'selected' : ''}>סכום (גדול→קטן)</option>
+        </select>
+      </div>
+    </div>
+  `;
+  document.getElementById('startDate').addEventListener('change', e => { state.startDate = e.target.value; state.page = 0; render(); });
+  document.getElementById('endDate').addEventListener('change', e => { state.endDate = e.target.value; state.page = 0; render(); });
+  document.getElementById('fileSel').addEventListener('change', e => { state.selectedFile = e.target.value; state.page = 0; render(); });
+  document.getElementById('counterSel').addEventListener('change', e => { state.selectedCounter = e.target.value; state.page = 0; render(); });
+  document.getElementById('minAmount').addEventListener('change', e => { state.minAmount = parseFloat(e.target.value) || 0; state.page = 0; render(); });
+  document.getElementById('classStatus').addEventListener('change', e => { state.classStatus = e.target.value; state.page = 0; render(); });
+  document.getElementById('sortBy').addEventListener('change', e => { state.sortBy = e.target.value; state.page = 0; render(); });
+}
+
+function getFilteredRows() {
+  const startMs = new Date(state.startDate).getTime();
+  const endMs = state.endDate ? new Date(state.endDate).getTime() + 86400000 : Number.MAX_SAFE_INTEGER;
+  const rows = [];
+  for (const cat of state.incomeCats) {
+    if (state.selectedFile !== 'all' && cat.id !== state.selectedFile) continue;
+    for (const r of cat.rows) {
+      if (!r.valueDate) continue;
+      const t = new Date(r.valueDate).getTime();
+      if (t < startMs || t >= endMs) continue;
+      if (r.flagged) continue;
+      const counter = (r.counterAccount || '').trim();
+      if (state.selectedCounter !== 'all' && counter !== state.selectedCounter) continue;
+      const amt = Math.max(r.credit || 0, r.debit || 0);
+      if (amt < state.minAmount) continue;
+      if (state.classStatus === 'classified' && !r.classification) continue;
+      if (state.classStatus === 'unclassified' && r.classification) continue;
+      rows.push({ ...r, _cat: cat });
+    }
+  }
+  rows.sort((a, b) => {
+    if (state.sortBy === 'amount') {
+      return Math.max(b.credit || 0, b.debit || 0) - Math.max(a.credit || 0, a.debit || 0);
+    }
+    return (a.valueDate || '').localeCompare(b.valueDate || '');
+  });
+  return rows;
+}
+
+function renderSummary(rows) {
+  const totalCredit = rows.reduce((s, r) => s + (r.credit || 0), 0);
+  const totalDebit  = rows.reduce((s, r) => s + (r.debit  || 0), 0);
+  const net = totalCredit - totalDebit;
+  document.getElementById('summary').innerHTML = `
+    <div class="summary">
+      <div class="sc">
+        <div class="label">סך זכות (הכנסות)</div>
+        <div class="val">${fmt(totalCredit)} ₪</div>
+      </div>
+      <div class="sc">
+        <div class="label">סך חובה (זיכויים)</div>
+        <div class="val" style="color:var(--debit)">${fmt(totalDebit)} ₪</div>
+      </div>
+      <div class="sc big">
+        <div class="label">הכנסה נטו</div>
+        <div class="val">${fmt(net)} ₪</div>
+      </div>
+      <div class="sc">
+        <div class="label">תנועות בסינון</div>
+        <div class="val" style="color:var(--text)">${rows.length.toLocaleString('he-IL')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderClassBreakdown(rows) {
+  const byClass = {};
+  for (const r of rows) {
+    const cls = r.classification || 'none';
+    if (!byClass[cls]) byClass[cls] = { count: 0, credit: 0, debit: 0 };
+    byClass[cls].count++;
+    byClass[cls].credit += r.credit || 0;
+    byClass[cls].debit  += r.debit  || 0;
+  }
+  const order = [...ClsShared.getClassOrder(), 'none'];
+  let html = `
+    <div class="class-panel">
+      <h4>פילוח לפי סיווג שורות</h4>
+      <div class="class-grid">
+  `;
+  for (const cls of order) {
+    const v = byClass[cls];
+    if (!v) continue;
+    const def = ClsShared.getClassDef(cls);
+    const lbl = cls === 'none' ? 'לא סווג' : (def?.he || cls);
+    const net = v.credit - v.debit;
+    const style = cls === 'none' ? 'background:#fafaf7; border-right:4px solid #ccc;' : ClsShared.classRowStyle(cls);
+    html += `
+      <div class="class-row" style="${style}">
+        <div>
+          <div class="name">${esc(lbl)}</div>
+          <div class="meta">${v.count} תנועות</div>
+        </div>
+        <div class="val">${fmt(net)} ₪</div>
+      </div>
+    `;
+  }
+  html += `</div></div>`;
+  document.getElementById('classBreakdown').innerHTML = html;
+}
+
+function renderTransactions(allRows) {
+  const totalPages = Math.max(1, Math.ceil(allRows.length / state.pageSize));
+  if (state.page >= totalPages) state.page = totalPages - 1;
+  const start = state.page * state.pageSize;
+  const rows = allRows.slice(start, start + state.pageSize);
+
+  if (!rows.length) {
+    document.getElementById('txBody').innerHTML = `<tr><td colspan="7" class="empty">אין תנועות בסינון זה</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  const html = rows.map(r => {
+    const cls = r.classification || '';
+    const note = r.note || '';
+    return `
+      <tr>
+        <td>${fmtDate(r.valueDate)}</td>
+        <td class="cat">${esc(r._cat.name)}</td>
+        <td class="desc">${esc(r.editedDescription || r.description || '—')}</td>
+        <td class="counter">${esc(r.counterAccount || '')}</td>
+        <td class="num debit">${r.debit > 0 ? fmt(r.debit) : ''}</td>
+        <td class="num credit">${r.credit > 0 ? fmt(r.credit) : ''}</td>
+        <td class="cls">${ClsShared.classSelectHtml(cls, r.id)}</td>
+        <td class="note">
+          <input type="text" data-id="${esc(r.id)}" value="${esc(note)}" placeholder="הערה (למי שיק, מטרה...)">
+        </td>
+      </tr>
+    `;
+  }).join('');
+  document.getElementById('txBody').innerHTML = html;
+
+  // Pagination
+  document.getElementById('pagination').innerHTML = `
+    <button id="firstPg" ${state.page === 0 ? 'disabled' : ''}>« ראשון</button>
+    <button id="prevPg" ${state.page === 0 ? 'disabled' : ''}>‹ קודם</button>
+    <span class="page-info">עמוד ${state.page + 1} מתוך ${totalPages} · מציג ${start + 1}–${start + rows.length} מתוך ${allRows.length}</span>
+    <button id="nextPg" ${state.page >= totalPages - 1 ? 'disabled' : ''}>הבא ›</button>
+    <button id="lastPg" ${state.page >= totalPages - 1 ? 'disabled' : ''}>אחרון »</button>
+  `;
+  document.getElementById('firstPg').addEventListener('click', () => { state.page = 0; render(); });
+  document.getElementById('prevPg').addEventListener('click', () => { state.page = Math.max(0, state.page - 1); render(); });
+  document.getElementById('nextPg').addEventListener('click', () => { state.page = Math.min(totalPages - 1, state.page + 1); render(); });
+  document.getElementById('lastPg').addEventListener('click', () => { state.page = totalPages - 1; render(); });
+
+  // Classification handlers
+  document.querySelectorAll('td.cls select.cls-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.id;
+      const value = sel.value || null;
+      for (const cat of state.incomeCats) {
+        const row = cat.rows.find(r => r.id === id);
+        if (row) { row.classification = value; break; }
+      }
+      sel.style.cssText = ClsShared.classSelectStyle(value);
+      try {
+        await fetch(`/api/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ classification: value }),
+        });
+        const def = ClsShared.getClassDef(value);
+        showToast(value ? `סווג: ${def?.he || ''}` : 'הוסר סיווג');
+        renderClassBreakdown(getFilteredRows());
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+
+  document.querySelectorAll('td.note input').forEach(input => {
+    input.addEventListener('blur', async () => {
+      const id = input.dataset.id;
+      const newVal = input.value;
+      let existing = null;
+      for (const cat of state.incomeCats) {
+        const row = cat.rows.find(r => r.id === id);
+        if (row) { existing = row; break; }
+      }
+      if (!existing || (existing.note || '') === newVal) return;
+      existing.note = newVal;
+      try {
+        await fetch(`/api/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ note: newVal }),
+        });
+        showToast(newVal ? 'הערה נשמרה' : 'הערה נמחקה');
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+}
+
+load();
+</script>
+</body>
+</html>

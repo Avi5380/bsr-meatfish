@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דוח סיכום — בשר ודגים</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --income:   #2a6f45;
+  --expense:  #c92a2a;
+  --neutral:  #6b6b6b;
+  --warn:     #b48700;
+  --official: #1c4f7c;
+  --evidence: #8c4d1a;
+}
+
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1080px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1080px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 36px; margin: 0 0 4px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 14px; margin-bottom: 24px; }
+h2 { font-family: 'Frank Ruhl Libre', serif; font-size: 24px; margin: 30px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+h3 { font-size: 15px; color: #555; margin: 16px 0 8px; }
+
+/* ===== Headline card ===== */
+.headline {
+  background: #1a1a1a;
+  color: white;
+  border-radius: 14px;
+  padding: 26px 28px;
+  margin: 16px 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.headline .item { text-align: center; }
+.headline .label { font-size: 12px; opacity: .7; letter-spacing: .04em; text-transform: uppercase; font-weight: 700; }
+.headline .val { font-size: 36px; font-weight: 900; margin-top: 6px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.headline .val.pos { color: #4ade80; }
+.headline .val.neg { color: #ff6b5b; }
+.headline .sub { font-size: 12px; opacity: .6; margin-top: 4px; }
+
+/* ===== Section cards ===== */
+.section-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; margin: 14px 0; }
+.section-card .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-card .sec-title { font-family: 'Frank Ruhl Libre', serif; font-size: 19px; font-weight: 700; }
+.section-card .sec-source { font-size: 11px; color: var(--text-3); background: #f0ede2; padding: 3px 10px; border-radius: 4px; font-weight: 700; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 6px 0 8px; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: right; }
+th { background: #efebe2; font-weight: 700; font-size: 12px; }
+tr.subtotal td { background: #fafaf7; font-weight: 700; border-top: 2px solid #333; }
+tr.grandtotal td { background: #1a1a1a; color: white; font-weight: 800; font-size: 14px; border-top: 0; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+td.num.pos { color: var(--income); }
+td.num.neg { color: var(--expense); }
+td.num.gray { color: var(--text-3); }
+
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 10px 20px; font-size: 14px; padding: 6px 0; border-bottom: 1px dashed #ddd; }
+.kv:last-child { border-bottom: 0; }
+.kv .k { color: var(--text-2); }
+.kv .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+.kv .v.pos { color: var(--income); }
+.kv .v.neg { color: var(--expense); }
+.kv.total { font-size: 16px; padding-top: 10px; margin-top: 6px; border-top: 2px solid #333; border-bottom: 0; }
+.kv.total .k { font-weight: 700; }
+
+.note { background: #fff5d6; border: 1px solid #d4a800; border-right: 4px solid #d4a800; padding: 10px 14px; border-radius: 6px; margin: 8px 0; font-size: 12px; color: #5a4500; }
+
+.loading { padding: 60px; text-align: center; color: var(--text-3); }
+.spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .topbar, button { display: none; }
+  body { background: white; }
+  .container { max-width: 100%; }
+  .section-card { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>דוח סיכום — בשר ודגים</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/case-file.html">תיק ראיות</a>
+      <a href="/deliveries.html">משלוחים</a>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">דוח סיכום פיננסי</h1>
+<div class="subtitle" id="metaSubtitle">טוען נתונים...</div>
+
+<div id="content">
+  <div class="loading"><div class="spinner"></div></div>
+</div>
+
+</div>
+
+<script>
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(Math.round(n));
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
+
+async function load() {
+  const [hashRes, caseRes, delRes, classRes] = await Promise.all([
+    fetch('/api/data').then(r => r.json()),
+    fetch('/api/case').then(r => r.json()),
+    fetch('/api/deliveries').then(r => r.json()),
+    fetch('/api/classifications').then(r => r.json()),
+  ]);
+  render(hashRes, caseRes, delRes, classRes);
+}
+
+function render(hash, cse, del, cls) {
+  const now = new Date().toLocaleString('he-IL');
+  document.getElementById('metaSubtitle').textContent = `הופק: ${now} · מקורות: 78 קבצי אקסל · 2 צ'אטים · 972 הקלטות`;
+
+  // ============ Classification breakdown across ALL rows ============
+  const classDefs = {};
+  for (const item of cls.items || []) classDefs[item.id] = item;
+  const byClass = {}; // classification id -> { count, credit, debit, bySection: {} }
+  for (const cat of hash.categories) {
+    for (const r of cat.rows) {
+      if (!r.classification) continue;
+      if (!byClass[r.classification]) byClass[r.classification] = { count: 0, credit: 0, debit: 0, bySection: {} };
+      const b = byClass[r.classification];
+      b.count++;
+      b.credit += r.credit || 0;
+      b.debit  += r.debit  || 0;
+      const sec = cat.section;
+      if (!b.bySection[sec]) b.bySection[sec] = { credit: 0, debit: 0 };
+      b.bySection[sec].credit += r.credit || 0;
+      b.bySection[sec].debit  += r.debit  || 0;
+    }
+  }
+
+  // ============ 1. OFFICIAL BOOKS ============
+  const officialIncome  = hash.summary.income;
+  const officialExpense = hash.summary.expense;
+  const officialTax     = hash.summary.tax;
+  const officialFin     = hash.summary.financing;
+  const officialRelated = hash.summary.related;
+  const officialNet     = officialIncome - officialExpense;
+
+  // Owner account — look at financing categories containing "בעלים"
+  const ownerCats = hash.categories.filter(c => c.section === 'financing' && /בעלים/.test(c.name));
+  let ownerCredit = 0, ownerDebit = 0;
+  for (const c of ownerCats) { ownerCredit += c.totals.credit; ownerDebit += c.totals.debit; }
+  // owner_balance > 0 => owner gave more than took (company owes owner)
+  // owner_balance < 0 => owner took more than gave (owner owes company)
+  const ownerBalance = ownerCredit - ownerDebit;
+
+  // ============ 2. CASE FILE (cash from chats) ============
+  const cashTaken    = cse.live.totals.taken;
+  const cashReturned = cse.live.totals.returned;
+  const cashReview   = cse.live.totals.review;
+  const cashNet      = cashTaken - cashReturned;
+  const cashByCat    = cse.live.totalsByCat || {};
+
+  // ============ 3. DELIVERIES ============
+  const delTotal     = del.live.totalAmount;
+  const delByType    = del.live.byType;
+  const delByMonth   = del.live.byMonth;
+
+  // ============ 4. SETTLEMENT ESTIMATE ============
+  // Bottom line: if Mani took cash beyond what was salary, that's owed back.
+  // We can't be definitive without user marking categories — use confirmed "taken" + classified
+  const salaryTaken    = cashByCat.salary        || 0;
+  const storeExpenses  = cashByCat.store         || 0;
+  const maintenance    = cashByCat.maintenance   || 0;
+  const returnedClass  = cashByCat.returned_cash || 0;
+  const otherClass     = cashByCat.other         || 0;
+
+  // ============ HEADLINE ============
+  let html = `
+    <div class="headline">
+      <div class="item">
+        <div class="label">סך הכנסות (רשמי)</div>
+        <div class="val pos">${fmt(officialIncome)} ₪</div>
+        <div class="sub">מספרי הנהלת חשבונות</div>
+      </div>
+      <div class="item">
+        <div class="label">סך הוצאות (רשמי)</div>
+        <div class="val neg">${fmt(officialExpense)} ₪</div>
+        <div class="sub">מספרי הנהלת חשבונות</div>
+      </div>
+    </div>
+
+    <div class="headline">
+      <div class="item">
+        <div class="label">תוצאה תפעולית (רשמית)</div>
+        <div class="val ${officialNet >= 0 ? 'pos' : 'neg'}">${fmtSign(officialNet)} ₪</div>
+        <div class="sub">הכנסות פחות הוצאות</div>
+      </div>
+      <div class="item">
+        <div class="label">חשבון בעלים (יתרה)</div>
+        <div class="val ${ownerBalance >= 0 ? 'pos' : 'neg'}">${fmtSign(ownerBalance)} ₪</div>
+        <div class="sub">${ownerBalance >= 0 ? 'החברה חייבת לבעלים' : 'הבעלים חייב לחברה'}</div>
+      </div>
+    </div>
+
+    <h2>1 · ספרים רשמיים (הנהלת חשבונות)</h2>
+  `;
+
+  // Yearly breakdown
+  html += `
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">פילוח שנתי</div>
+        <div class="sec-source">78 קבצי אקסל · 19,306 שורות</div>
+      </div>
+      <table>
+        <thead><tr><th>שנה</th><th>הכנסות</th><th>הוצאות</th><th>נטו</th><th>תנועות</th></tr></thead>
+        <tbody>
+          ${hash.yearly.map(y => {
+            const net = y.income - y.expense;
+            return `<tr>
+              <td><strong>${y.year}</strong></td>
+              <td class="num pos">${fmt(y.income)}</td>
+              <td class="num neg">${fmt(y.expense)}</td>
+              <td class="num ${net >= 0 ? 'pos' : 'neg'}">${fmtSign(net)}</td>
+              <td class="num gray">${y.count.toLocaleString('he-IL')}</td>
+            </tr>`;
+          }).join('')}
+          <tr class="grandtotal">
+            <td>סה"כ</td>
+            <td class="num">${fmt(officialIncome)}</td>
+            <td class="num">${fmt(officialExpense)}</td>
+            <td class="num">${fmtSign(officialNet)}</td>
+            <td class="num">${hash.summary.rowCount.toLocaleString('he-IL')}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>סעיפים נוספים</h3>
+      <div class="kv"><span class="k">מיסים (מע"מ, מס הכנסה, ביטוח לאומי)</span><span class="v">${fmt(officialTax)} ₪</span></div>
+      <div class="kv"><span class="k">מימון (הלוואות, חשבונות בעלים)</span><span class="v">${fmt(officialFin)} ₪</span></div>
+      <div class="kv"><span class="k">חוז (חשבונות קשורים)</span><span class="v">${fmt(officialRelated)} ₪</span></div>
+    </div>
+
+    <h2>2 · פילוח לפי סיווג שורות (הדוח הסופי)</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">סיווגים שאישרת ידנית</div>
+        <div class="sec-source">${cls.items.length} סיווגים · <a href="/owner-account.html">חשבון בעלים</a> · <a href="/income-account.html">הכנסות</a></div>
+      </div>
+
+      ${Object.keys(byClass).length ? `
+        <table>
+          <thead>
+            <tr>
+              <th>סיווג</th>
+              <th>תנועות</th>
+              <th>זכות (הכניס/קיבל)</th>
+              <th>חובה (לקח/שילם)</th>
+              <th>נטו</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(cls.items || []).map(item => {
+              const v = byClass[item.id];
+              if (!v) return '';
+              const net = v.credit - v.debit;
+              return `<tr>
+                <td>
+                  <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:${item.color}; vertical-align:middle; margin-inline-end:8px"></span>
+                  <strong>${item.he}</strong>
+                </td>
+                <td class="num">${v.count}</td>
+                <td class="num pos">${fmt(v.credit)} ₪</td>
+                <td class="num neg">${fmt(v.debit)} ₪</td>
+                <td class="num ${net >= 0 ? 'pos' : 'neg'}">${fmtSign(net)} ₪</td>
+              </tr>`;
+            }).join('')}
+            <tr class="grandtotal">
+              <td>סה"כ סיווג</td>
+              <td class="num">${Object.values(byClass).reduce((s,v) => s + v.count, 0)}</td>
+              <td class="num">${fmt(Object.values(byClass).reduce((s,v) => s + v.credit, 0))} ₪</td>
+              <td class="num">${fmt(Object.values(byClass).reduce((s,v) => s + v.debit, 0))} ₪</td>
+              <td class="num">${fmtSign(Object.values(byClass).reduce((s,v) => s + (v.credit - v.debit), 0))} ₪</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note" style="margin-top:14px">
+          <strong>הוראת קריאה:</strong> "זכות" = כסף שהאיש/חברה הזרים / שילם בפועל. "חובה" = כסף שהאיש/חברה לקח / חייב.
+          הנטו הוא היתרה לכל גורם — חיובי = הוא בזכות אצלכם, שלילי = הוא חייב.
+        </div>
+      ` : `
+        <div class="note">
+          עוד לא סיווגת שורות. עבור אל
+          <a href="/owner-account.html"><strong>חשבון בעלים</strong></a> או
+          <a href="/income-account.html"><strong>הכנסות</strong></a>,
+          סווג כל שורה לסיווג המתאים (ניתן ליצור סיווגים חדשים בכפתור "⚙ סיווגים"),
+          והדוח כאן יתעדכן אוטומטית.
+        </div>
+      `}
+    </div>
+
+    <h2>3 · חשבון בעלים</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">תזרים בעלים</div>
+        <div class="sec-source">${ownerCats.length} קבצי בעלים</div>
+      </div>
+      <div class="kv"><span class="k">סך זכות (החברה קיבלה מהבעלים)</span><span class="v pos">${fmt(ownerCredit)} ₪</span></div>
+      <div class="kv"><span class="k">סך חובה (הבעלים לקח מהחברה)</span><span class="v neg">${fmt(ownerDebit)} ₪</span></div>
+      <div class="kv total"><span class="k">${ownerBalance >= 0 ? 'החברה חייבת לבעלים' : 'הבעלים חייב לחברה'}</span><span class="v ${ownerBalance >= 0 ? 'pos' : 'neg'}">${fmt(Math.abs(ownerBalance))} ₪</span></div>
+    </div>
+
+    <h2>4 · מזומן לא מדווח (מצ'אטים)</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">ראיות מתוך וואטסאפ</div>
+        <div class="sec-source">2 צ'אטים · 972 הקלטות · ${cse.evidence.length} פריטי ראיה</div>
+      </div>
+
+      <div class="note">
+        <strong>הערה:</strong> הסכומים תלויים בסימון ידני בתיק הראיות.
+        רק פריטים שסומנו <strong>"נלקח"</strong> ו<strong>"מסור/הוחזר"</strong> נכללים.
+        פריטים <strong>"לבדיקה"</strong> ו<strong>"לא קשור"</strong> אינם נספרים.
+      </div>
+
+      <div class="kv"><span class="k">סומן "נלקח"</span><span class="v neg">${fmt(cashTaken)} ₪</span></div>
+      <div class="kv"><span class="k">סומן "מסור / הוחזר"</span><span class="v pos">${fmt(cashReturned)} ₪</span></div>
+      <div class="kv"><span class="k">עדיין "לבדיקה" (לא נספר)</span><span class="v gray">${fmt(cashReview)} ₪</span></div>
+      <div class="kv total"><span class="k">נטו מזומן (נלקח − מוחזר)</span><span class="v ${cashNet >= 0 ? 'neg' : 'pos'}">${fmtSign(cashNet)} ₪</span></div>
+
+      ${Object.values(cashByCat).some(v => v > 0) ? `
+        <h3>פילוח "נלקח" לפי שיוך</h3>
+        <table>
+          <tr><td>משכורת עובדים</td><td class="num">${fmt(cashByCat.salary || 0)} ₪</td></tr>
+          <tr><td>הוצאות חנות</td><td class="num">${fmt(cashByCat.store || 0)} ₪</td></tr>
+          <tr><td>תחזוקה</td><td class="num">${fmt(cashByCat.maintenance || 0)} ₪</td></tr>
+          <tr><td>כסף שחזר (החזרי לקוחות וכו')</td><td class="num">${fmt(cashByCat.returned_cash || 0)} ₪</td></tr>
+          <tr><td>עודף</td><td class="num">${fmt(cashByCat.change || 0)} ₪</td></tr>
+          <tr><td>הלוואה / משיכת בעלים</td><td class="num">${fmt(cashByCat.loan || 0)} ₪</td></tr>
+          <tr><td>אחר</td><td class="num">${fmt(cashByCat.other || 0)} ₪</td></tr>
+        </table>
+      ` : '<div class="note">עוד לא סימנת פריטים. עבור אל <a href="/case-file.html">תיק הראיות</a> כדי לסמן.</div>'}
+    </div>
+
+    <h2>5 · חיובי משלוחים</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">דיווחי מני ומוטי בק</div>
+        <div class="sec-source">${del.charges.length} חיובים</div>
+      </div>
+
+      <div class="kv"><span class="k">סך חיובים פעילים</span><span class="v">${fmt(delTotal)} ₪</span></div>
+      <div class="kv"><span class="k">לא נספר (כפילויות + מוחרגים)</span><span class="v gray">${fmt(del.charges.reduce((s, c) => (c.status === 'duplicate' || c.status === 'excluded') ? s + c.effectiveAmount : s, 0))} ₪</span></div>
+
+      <h3>לפי סוג</h3>
+      <table>
+        ${Object.entries(delByType).sort((a,b)=>b[1]-a[1]).map(([t, v]) => {
+          const labels = { delivery: 'משלוחים', employee_hours: 'שעות עובד', hours: 'שעות', purchase: 'רכישות', other: 'אחר' };
+          return `<tr><td>${labels[t] || t}</td><td class="num">${fmt(v)} ₪</td></tr>`;
+        }).join('')}
+      </table>
+    </div>
+
+    <h2>6 · הצלבת אזכורי הכנסות (מהצ'אטים מול הספרים)</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">ממצא מ-30.6.2025</div>
+        <div class="sec-source">דוח זד שזוהה</div>
+      </div>
+
+      <div class="note">
+        בהודעת וואטסאפ מ-30.6.2025 מני מציין: <strong>"5 חודשים, מכירות 1,695,114 ₪. לחלק ל-5 = 339,022 ₪ לחודש."</strong>
+        בהשוואה לרשום בספרים — נדרשת בדיקת תאימות.
+      </div>
+
+      <h3>הכנסות חודשיות ממוצעות לפי הספרים</h3>
+      <table>
+        <thead><tr><th>שנה</th><th>הכנסות בשנה</th><th>ממוצע חודשי</th></tr></thead>
+        <tbody>
+          ${hash.yearly.map(y => `
+            <tr>
+              <td>${y.year}</td>
+              <td class="num pos">${fmt(y.income)} ₪</td>
+              <td class="num">${fmt(y.income / 12)} ₪</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>7 · שורה תחתונה (אומדן)</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">חישוב משולב</div>
+        <div class="sec-source">משולב — דורש אימות</div>
+      </div>
+
+      <div class="note">
+        <strong>אזהרה:</strong> זהו אומדן בלבד המבוסס על הנתונים הזמינים והסימון הנוכחי בתיק הראיות.
+        הסיווג הסופי נדרש על ידי רואה חשבון ו/או הדיין.
+      </div>
+
+      <div class="kv"><span class="k">תוצאה תפעולית רשמית</span><span class="v ${officialNet >= 0 ? 'pos' : 'neg'}">${fmtSign(officialNet)} ₪</span></div>
+      <div class="kv"><span class="k">+ מזומן לא מדווח שסומן "נלקח"</span><span class="v neg">+${fmt(cashTaken)} ₪</span></div>
+      <div class="kv"><span class="k">− מזומן שסומן "מסור/הוחזר"</span><span class="v pos">−${fmt(cashReturned)} ₪</span></div>
+      <div class="kv total"><span class="k">תוצאה כלכלית מותאמת (אומדן)</span><span class="v ${(officialNet + cashTaken - cashReturned) >= 0 ? 'pos' : 'neg'}">${fmtSign(officialNet + cashTaken - cashReturned)} ₪</span></div>
+
+      <h3>חשבון בעלים מסכם</h3>
+      <div class="kv total"><span class="k">${ownerBalance >= 0 ? 'החברה חייבת לבעלים' : 'הבעלים חייב לחברה'}</span><span class="v ${ownerBalance >= 0 ? 'pos' : 'neg'}">${fmt(Math.abs(ownerBalance))} ₪</span></div>
+    </div>
+  `;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+load();
+</script>
+</body>
+</html>

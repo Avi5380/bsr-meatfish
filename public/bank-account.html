@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חשבונות בנק — תנועות</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --credit:  #2a6f45;
+  --debit:   #c92a2a;
+}
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 30px; margin: 0 0 6px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 18px; }
+h3 { font-size: 15px; margin: 18px 0 6px; }
+
+/* Bank tabs */
+.bank-tabs { display: flex; gap: 8px; margin: 16px 0 8px; }
+.bank-tab {
+  background: white; border: 2px solid var(--line); border-radius: 12px;
+  padding: 12px 22px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+}
+.bank-tab .bn-meta { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.bank-tab:hover { background: #f0ede2; }
+.bank-tab.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+.bank-tab.active .bn-meta { color: rgba(255,255,255,.7); }
+
+.controls { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
+.ctrl { display: flex; flex-direction: column; gap: 4px; }
+.ctrl label { font-size: 11px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ctrl input, .ctrl select { background: white; border: 1.5px solid var(--line); border-radius: 7px; padding: 6px 10px; font-family: inherit; font-size: 13px; min-width: 130px; }
+.ctrl .quick { display: flex; gap: 4px; flex-wrap: wrap; }
+.ctrl .quick button { background: white; border: 1px solid var(--line); padding: 4px 10px; border-radius: 5px; font-family: inherit; font-size: 11px; cursor: pointer; font-weight: 600; }
+.ctrl .quick button.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0; }
+.sc { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.sc .label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+.sc .val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sc .val.credit { color: var(--credit); }
+.sc .val.debit  { color: var(--debit); }
+.sc .sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.sc.big { background: #1a1a1a; color: white; }
+.sc.big .label { color: rgba(255,255,255,.7); }
+.sc.big .val.pos { color: #4ade80; }
+.sc.big .val.neg { color: #ff6b5b; }
+
+.class-panel { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+.class-panel h4 { margin: 0 0 8px; font-size: 14px; }
+.class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; font-size: 12px; }
+.class-row { display: flex; justify-content: space-between; padding: 6px 10px; border-radius: 6px; align-items: center; gap: 10px; }
+.class-row .name { font-weight: 600; }
+.class-row .val { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.class-row .meta { font-size: 11px; color: var(--text-3); }
+
+table { border-collapse: collapse; width: 100%; font-size: 12px; background: white; }
+.tx-table { background: white; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+th { background: #efebe2; padding: 7px 10px; text-align: right; font-weight: 700; font-size: 11px; position: sticky; top: 0; z-index: 5; }
+td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+td.credit { color: var(--credit); }
+td.debit  { color: var(--debit); }
+td.desc   { max-width: 260px; word-break: break-word; }
+td.ref    { font-size: 10px; color: var(--text-3); font-family: 'Menlo', monospace; }
+tr.flagged td { background: #fff5d6; }
+tr.matched td { background: linear-gradient(to right, rgba(42,111,69,.06), transparent 40%); }
+tr.matched.flagged td { background: linear-gradient(to right, rgba(42,111,69,.1), #fff5d6 40%); }
+.match-pill {
+  display: inline-block; background: #ddecdb; color: #1e4d31;
+  padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 700;
+  border: 1px solid #97c0a5; margin: 2px 0;
+}
+.match-pill.multi { background: #f0e0c8; color: #7a4d10; border-color: #d4a800; }
+.match-detail {
+  font-size: 11px; color: var(--text-2); margin-top: 3px; padding: 4px 6px;
+  background: rgba(42,111,69,.06); border-right: 2px solid var(--credit); border-radius: 3px;
+  max-width: 240px; word-break: break-word;
+}
+.match-detail .cat { font-weight: 700; color: #1e4d31; }
+.match-detail .dt { font-size: 10px; color: var(--text-3); }
+td.match { max-width: 260px; }
+
+td.cls select, td.note input {
+  background: white; border: 1.5px solid var(--line); border-radius: 6px;
+  padding: 3px 6px; font-family: inherit; font-size: 11px; font-weight: 600;
+  cursor: pointer;
+}
+td.cls select { min-width: 150px; max-width: 200px; }
+td.note input { min-width: 160px; max-width: 280px; cursor: text; }
+td.note input:focus { outline: none; border-color: var(--text); }
+td.note input:not(:placeholder-shown) { background: #fff8dc; border-color: #d4a800; }
+
+.flag-btn { background: transparent; border: 1.5px solid var(--line); padding: 3px 7px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.flag-btn.on { background: #d4a800; color: white; border-color: #d4a800; }
+
+.pagination { display: flex; gap: 6px; justify-content: center; align-items: center; padding: 14px 0; }
+.pagination button { background: white; border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; }
+.pagination button:disabled { opacity: .4; cursor: default; }
+.pagination .page-info { font-size: 12px; color: var(--text-3); padding: 0 12px; }
+
+.empty { padding: 30px; text-align: center; color: var(--text-3); }
+.loading { padding: 60px; text-align: center; color: var(--text-3); }
+.spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 24px; inset-inline: 24px; max-width: 320px; margin: 0 auto; background: #1a1a1a; color: white; font-size: 13px; padding: 11px 16px; border-radius: 8px; z-index: 100; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; transform: translateY(10px); pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media print {
+  .topbar, .controls, .pagination, td.cls, td.flag { display: none; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>חשבונות בנק — תנועות</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/owner-account.html">חשבון בעלים</a>
+      <a href="/summary.html">דוח סיכום</a>
+      <button id="manageClasses">⚙ סיווגים</button>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">חשבונות בנק — מזרחי-טפחות + פאג"י</h1>
+<div class="subtitle" id="subt">טוען...</div>
+
+<div class="bank-tabs" id="bankTabs"></div>
+<div id="controls"></div>
+<div id="summary"></div>
+<div id="classBreakdown"></div>
+
+<h3>תנועות — שורות עם רקע ירוק נמצאו במעקב האישי שלך</h3>
+<div class="tx-table">
+  <table>
+    <thead><tr>
+      <th>תאריך</th>
+      <th>תיאור</th>
+      <th>מעקב אישי</th>
+      <th>חובה</th>
+      <th>זכות</th>
+      <th>יתרה</th>
+      <th>סיווג</th>
+      <th>הערה</th>
+      <th>🚩</th>
+    </tr></thead>
+    <tbody id="txBody"><tr><td colspan="9" class="loading"><div class="spinner"></div></td></tr></tbody>
+  </table>
+</div>
+
+<div class="pagination" id="pagination"></div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="/classifications-shared.js"></script>
+<script>
+const state = {
+  data: null,
+  selectedBank: 'tefahot',
+  startDate: '2021-08-01',
+  endDate: null,
+  search: '',
+  minAmount: 0,
+  side: 'all', // 'all' | 'credit' | 'debit'
+  classStatus: 'all',
+  trackingMatch: 'all', // 'all' | 'matched' | 'unmatched'
+  page: 0,
+  pageSize: 100,
+};
+
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 }).format(Math.round((n + Number.EPSILON) * 100) / 100);
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
+const fmtDate = iso => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timeout); t._timeout = setTimeout(()=> t.classList.remove('show'), 1700);
+}
+
+async function load() {
+  await ClsShared.loadClassifications();
+  const r = await fetch('/api/banks');
+  state.data = await r.json();
+  document.getElementById('manageClasses').addEventListener('click', () => {
+    ClsShared.openClassModal(() => render());
+  });
+  render();
+}
+
+function render() {
+  const totalRows = state.data.rows.length;
+  document.getElementById('subt').textContent = `${state.data.banks.length} בנקים · ${totalRows.toLocaleString('he-IL')} תנועות סה"כ`;
+  renderBankTabs();
+  renderControls();
+  const filtered = getFilteredRows();
+  renderSummary(filtered);
+  renderClassBreakdown(filtered);
+  renderTransactions(filtered);
+}
+
+function renderBankTabs() {
+  const html = state.data.banks.map(b => `
+    <button class="bank-tab ${state.selectedBank === b.id ? 'active' : ''}" data-bank="${esc(b.id)}">
+      <div>${esc(b.name)}</div>
+      <div class="bn-meta">${b.rowCount.toLocaleString('he-IL')} שורות · ${b.periodStart || ''} → ${b.periodEnd || ''}</div>
+    </button>
+  `).join('');
+  const bar = document.getElementById('bankTabs');
+  bar.innerHTML = html;
+  bar.querySelectorAll('.bank-tab').forEach(t => t.addEventListener('click', () => {
+    state.selectedBank = t.dataset.bank; state.page = 0; render();
+  }));
+}
+
+function renderControls() {
+  const today = new Date().toISOString().slice(0, 10);
+  const quickRanges = [
+    { label: 'מ-8/2021', start: '2021-08-01', end: null },
+    { label: '2022', start: '2022-01-01', end: '2022-12-31' },
+    { label: '2023', start: '2023-01-01', end: '2023-12-31' },
+    { label: '2024', start: '2024-01-01', end: '2024-12-31' },
+    { label: '2025', start: '2025-01-01', end: '2025-12-31' },
+    { label: 'הכל', start: '2020-01-01', end: null },
+  ];
+
+  document.getElementById('controls').innerHTML = `
+    <div class="controls">
+      <div class="ctrl">
+        <label>מתאריך</label>
+        <input type="date" id="startDate" value="${state.startDate}">
+      </div>
+      <div class="ctrl">
+        <label>עד תאריך</label>
+        <input type="date" id="endDate" value="${state.endDate || today}">
+      </div>
+      <div class="ctrl">
+        <label>תקופות</label>
+        <div class="quick">
+          ${quickRanges.map((q, i) => `<button data-q="${i}" class="${state.startDate === q.start && (state.endDate || null) === q.end ? 'active' : ''}">${q.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="ctrl">
+        <label>חיפוש תיאור / אסמכתא</label>
+        <input type="text" id="searchInput" value="${esc(state.search)}" placeholder="הקלד..." style="min-width:180px">
+      </div>
+      <div class="ctrl">
+        <label>סכום מינ׳</label>
+        <input type="number" id="minAmount" value="${state.minAmount}" step="100" min="0">
+      </div>
+      <div class="ctrl">
+        <label>צד</label>
+        <select id="side">
+          <option value="all"   ${state.side === 'all'    ? 'selected' : ''}>הכל</option>
+          <option value="credit" ${state.side === 'credit' ? 'selected' : ''}>רק זכות (נכנס)</option>
+          <option value="debit"  ${state.side === 'debit'  ? 'selected' : ''}>רק חובה (יצא)</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>סטטוס סיווג</label>
+        <select id="classStatus">
+          <option value="all" ${state.classStatus === 'all' ? 'selected' : ''}>הכל</option>
+          <option value="unclassified" ${state.classStatus === 'unclassified' ? 'selected' : ''}>לא מסווגים</option>
+          <option value="classified" ${state.classStatus === 'classified' ? 'selected' : ''}>מסווגים</option>
+          <option value="flagged" ${state.classStatus === 'flagged' ? 'selected' : ''}>מסומנים 🚩</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label>מעקב אישי</label>
+        <select id="trackingMatch">
+          <option value="all" ${state.trackingMatch === 'all' ? 'selected' : ''}>הכל</option>
+          <option value="matched" ${state.trackingMatch === 'matched' ? 'selected' : ''}>רק תואמים למעקב</option>
+          <option value="unmatched" ${state.trackingMatch === 'unmatched' ? 'selected' : ''}>רק לא תואמים</option>
+        </select>
+      </div>
+    </div>
+  `;
+  document.getElementById('startDate').addEventListener('change', e => { state.startDate = e.target.value; state.page = 0; render(); });
+  document.getElementById('endDate').addEventListener('change', e => { state.endDate = e.target.value; state.page = 0; render(); });
+  document.querySelectorAll('.quick button').forEach(btn => btn.addEventListener('click', () => {
+    const q = quickRanges[btn.dataset.q]; state.startDate = q.start; state.endDate = q.end; state.page = 0; render();
+  }));
+  document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value; state.page = 0; render(); });
+  document.getElementById('minAmount').addEventListener('change', e => { state.minAmount = parseFloat(e.target.value) || 0; state.page = 0; render(); });
+  document.getElementById('side').addEventListener('change', e => { state.side = e.target.value; state.page = 0; render(); });
+  document.getElementById('classStatus').addEventListener('change', e => { state.classStatus = e.target.value; state.page = 0; render(); });
+  document.getElementById('trackingMatch').addEventListener('change', e => { state.trackingMatch = e.target.value; state.page = 0; render(); });
+}
+
+function getFilteredRows() {
+  const startMs = new Date(state.startDate).getTime();
+  const endMs = state.endDate ? new Date(state.endDate).getTime() + 86400000 : Number.MAX_SAFE_INTEGER;
+  const q = state.search.trim();
+  return state.data.rows.filter(r => {
+    if (r.bank !== state.selectedBank) return false;
+    if (!r.date) return false;
+    const t = new Date(r.date).getTime();
+    if (t < startMs || t >= endMs) return false;
+    if (q && !(`${r.description} ${r.ref}`.includes(q))) return false;
+    const amt = Math.max(r.credit, r.debit);
+    if (amt < state.minAmount) return false;
+    if (state.side === 'credit' && !(r.credit > 0)) return false;
+    if (state.side === 'debit'  && !(r.debit > 0)) return false;
+    if (state.classStatus === 'classified'   && !r.classification) return false;
+    if (state.classStatus === 'unclassified' && r.classification) return false;
+    if (state.classStatus === 'flagged'      && !r.flagged) return false;
+    const hasMatch = (r.trackingMatches || []).length > 0;
+    if (state.trackingMatch === 'matched'   && !hasMatch) return false;
+    if (state.trackingMatch === 'unmatched' && hasMatch) return false;
+    return true;
+  });
+}
+
+function renderSummary(rows) {
+  const credit = rows.reduce((s, r) => s + r.credit, 0);
+  const debit  = rows.reduce((s, r) => s + r.debit, 0);
+  const net = credit - debit;
+  const matched = rows.filter(r => (r.trackingMatches || []).length > 0).length;
+  const matchPct = rows.length ? Math.round(matched / rows.length * 100) : 0;
+  document.getElementById('summary').innerHTML = `
+    <div class="summary">
+      <div class="sc">
+        <div class="label">סך זכות (נכנס)</div>
+        <div class="val credit">${fmt(credit)} ₪</div>
+        <div class="sub">${rows.filter(r => r.credit > 0).length} תנועות</div>
+      </div>
+      <div class="sc">
+        <div class="label">סך חובה (יצא)</div>
+        <div class="val debit">${fmt(debit)} ₪</div>
+        <div class="sub">${rows.filter(r => r.debit > 0).length} תנועות</div>
+      </div>
+      <div class="sc big">
+        <div class="label">נטו (זכות − חובה)</div>
+        <div class="val ${net >= 0 ? 'pos' : 'neg'}">${fmtSign(net)} ₪</div>
+      </div>
+      <div class="sc">
+        <div class="label">תאמו למעקב האישי</div>
+        <div class="val" style="color:#2a6f45">${matched.toLocaleString('he-IL')} / ${rows.length.toLocaleString('he-IL')}</div>
+        <div class="sub">${matchPct}% מהתנועות</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderClassBreakdown(rows) {
+  const byClass = {};
+  for (const r of rows) {
+    const cls = r.classification || 'none';
+    if (!byClass[cls]) byClass[cls] = { count: 0, credit: 0, debit: 0 };
+    byClass[cls].count++;
+    byClass[cls].credit += r.credit;
+    byClass[cls].debit  += r.debit;
+  }
+  const order = [...ClsShared.getClassOrder(), 'none'];
+  let html = `<div class="class-panel"><h4>פילוח לפי סיווג</h4><div class="class-grid">`;
+  for (const cls of order) {
+    const v = byClass[cls];
+    if (!v) continue;
+    const def = ClsShared.getClassDef(cls);
+    const lbl = cls === 'none' ? 'לא סווג' : (def?.he || cls);
+    const net = v.credit - v.debit;
+    const style = cls === 'none' ? 'background:#fafaf7; border-right:4px solid #ccc;' : ClsShared.classRowStyle(cls);
+    html += `
+      <div class="class-row" style="${style}">
+        <div>
+          <div class="name">${esc(lbl)}</div>
+          <div class="meta">${v.count} תנועות · זכות ${fmt(v.credit)} · חובה ${fmt(v.debit)}</div>
+        </div>
+        <div class="val">${fmtSign(net)} ₪</div>
+      </div>
+    `;
+  }
+  html += `</div></div>`;
+  document.getElementById('classBreakdown').innerHTML = html;
+}
+
+function renderTransactions(allRows) {
+  const totalPages = Math.max(1, Math.ceil(allRows.length / state.pageSize));
+  if (state.page >= totalPages) state.page = totalPages - 1;
+  const start = state.page * state.pageSize;
+  const rows = allRows.slice(start, start + state.pageSize);
+
+  if (!rows.length) {
+    document.getElementById('txBody').innerHTML = `<tr><td colspan="9" class="empty">אין תנועות בסינון זה</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('txBody').innerHTML = rows.map(r => {
+    const cls = r.classification || '';
+    const matches = r.trackingMatches || [];
+    const hasMatch = matches.length > 0;
+    let matchHtml = '';
+    if (hasMatch) {
+      const m = matches[0]; // best match (closest in date)
+      const extra = matches.length > 1 ? `<span class="match-pill multi">+${matches.length-1}</span>` : '';
+      const dayHint = m.dayDiff === 0 ? 'אותו יום' : (m.dayDiff > 0 ? `+${m.dayDiff}י` : `${m.dayDiff}י`);
+      matchHtml = `
+        <span class="match-pill">✓ נמצא</span>${extra}
+        <div class="match-detail">
+          <div class="cat">${esc(m.category)}</div>
+          ${m.details ? `<div>${esc(m.details).slice(0, 80)}</div>` : ''}
+          ${m.notes ? `<div style="font-style:italic">${esc(m.notes).slice(0, 60)}</div>` : ''}
+          <div class="dt">${dayHint}${m.supplier ? ' · ' + esc(m.supplier) : ''}</div>
+        </div>
+      `;
+    } else {
+      matchHtml = '<span style="color:#ccc; font-size:11px">—</span>';
+    }
+    return `
+      <tr class="${r.flagged ? 'flagged' : ''} ${hasMatch ? 'matched' : ''}">
+        <td>${fmtDate(r.date)}<div class="ref" style="margin-top:2px">${esc(r.ref || '')}</div></td>
+        <td class="desc">${esc(r.description || '')}</td>
+        <td class="match">${matchHtml}</td>
+        <td class="num debit">${r.debit > 0 ? fmt(r.debit) : ''}</td>
+        <td class="num credit">${r.credit > 0 ? fmt(r.credit) : ''}</td>
+        <td class="num">${r.balance != null ? fmt(r.balance) : ''}</td>
+        <td class="cls">${ClsShared.classSelectHtml(cls, r.id)}</td>
+        <td class="note"><input type="text" data-id="${esc(r.id)}" value="${esc(r.note || '')}" placeholder="הערה..."></td>
+        <td class="flag"><button class="flag-btn ${r.flagged ? 'on' : ''}" data-id="${esc(r.id)}">${r.flagged ? '🚩' : '⚐'}</button></td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('pagination').innerHTML = `
+    <button id="firstPg" ${state.page === 0 ? 'disabled' : ''}>« ראשון</button>
+    <button id="prevPg" ${state.page === 0 ? 'disabled' : ''}>‹ קודם</button>
+    <span class="page-info">עמוד ${state.page + 1} / ${totalPages} · מציג ${start+1}–${start+rows.length} מתוך ${allRows.length}</span>
+    <button id="nextPg" ${state.page >= totalPages - 1 ? 'disabled' : ''}>הבא ›</button>
+    <button id="lastPg" ${state.page >= totalPages - 1 ? 'disabled' : ''}>אחרון »</button>
+  `;
+  document.getElementById('firstPg').addEventListener('click', () => { state.page = 0; render(); });
+  document.getElementById('prevPg').addEventListener('click', () => { state.page = Math.max(0, state.page - 1); render(); });
+  document.getElementById('nextPg').addEventListener('click', () => { state.page = Math.min(totalPages - 1, state.page + 1); render(); });
+  document.getElementById('lastPg').addEventListener('click', () => { state.page = totalPages - 1; render(); });
+
+  document.querySelectorAll('td.cls select.cls-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.id;
+      const value = sel.value || null;
+      const r = state.data.rows.find(x => x.id === id);
+      if (r) r.classification = value;
+      sel.style.cssText = ClsShared.classSelectStyle(value);
+      try {
+        await fetch(`/api/banks/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ classification: value }),
+        });
+        const def = ClsShared.getClassDef(value);
+        showToast(value ? `סווג: ${def?.he || ''}` : 'הוסר סיווג');
+        renderClassBreakdown(getFilteredRows());
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+
+  document.querySelectorAll('td.note input').forEach(input => {
+    input.addEventListener('blur', async () => {
+      const id = input.dataset.id;
+      const r = state.data.rows.find(x => x.id === id);
+      if (!r || (r.note || '') === input.value) return;
+      r.note = input.value;
+      try {
+        await fetch(`/api/banks/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ note: input.value }),
+        });
+        showToast('הערה נשמרה');
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+
+  document.querySelectorAll('.flag-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const r = state.data.rows.find(x => x.id === id);
+      if (!r) return;
+      r.flagged = !r.flagged;
+      btn.classList.toggle('on', r.flagged);
+      btn.textContent = r.flagged ? '🚩' : '⚐';
+      btn.closest('tr').classList.toggle('flagged', r.flagged);
+      try {
+        await fetch(`/api/banks/rows/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ flagged: r.flagged }),
+        });
+        showToast(r.flagged ? 'סומן' : 'הוסר סימון');
+      } catch (e) { showToast('שגיאה'); }
+    });
+  });
+}
+
+load();
+</script>
+</body>
+</html>

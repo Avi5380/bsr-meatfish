@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>תיק ראיות — תנועות מזומן מצ'אטי וואטסאפ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --taken:        #c92a2a;
+  --taken-bg:     #fce4e4;
+  --not-related:  #6b6b6b;
+  --not-rel-bg:   #ececec;
+  --returned:     #2a6f45;
+  --returned-bg:  #ddecdb;
+  --review:       #b48700;
+  --review-bg:    #fff5d6;
+}
+
+body {
+  font-family: 'Heebo', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  line-height: 1.55;
+}
+.container { max-width: 980px; margin: 0 auto; padding: 20px; }
+h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 30px; margin: 0 0 4px; letter-spacing: -.02em; }
+h2 { font-family: 'Frank Ruhl Libre', serif; font-size: 22px; margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+.subtitle { color: #555; font-size: 13px; margin-bottom: 18px; }
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+}
+.total-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.total-card .label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.total-card .val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.total-card .count { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.tc-taken .label, .tc-taken .val { color: var(--taken); }
+.tc-returned .label, .tc-returned .val { color: var(--returned); }
+.tc-not-related .label, .tc-not-related .val { color: var(--not-related); }
+.tc-review .label, .tc-review .val { color: var(--review); }
+
+.net-card {
+  background: #1a1a1a;
+  color: white;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 8px 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.net-card .nc-label { font-size: 12px; opacity: .8; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.net-card .nc-val { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.net-card .nc-note { font-size: 12px; opacity: .7; max-width: 320px; text-align: end; line-height: 1.4; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 6px 0 18px; background: white; border-radius: 8px; overflow: hidden; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: right; }
+th { background: #efebe2; font-weight: 700; font-size: 12px; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+td.num.taken { color: var(--taken); }
+td.num.returned { color: var(--returned); }
+td.num.review { color: var(--review); }
+td.num.not_related { color: var(--not-related); text-decoration: line-through; opacity: .65; }
+
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.chip:hover { background: #f0ede2; }
+.chip.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+.chip .badge { display: inline-block; background: rgba(0,0,0,.1); padding: 1px 7px; border-radius: 999px; font-size: 11px; margin-inline-start: 4px; font-weight: 700; }
+.chip.active .badge { background: rgba(255,255,255,.2); }
+
+.evidence {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-right: 4px solid var(--line);
+  border-radius: 10px;
+  margin: 10px 0;
+  padding: 14px 16px;
+  position: relative;
+  transition: border-color .2s;
+}
+.evidence[data-status="taken"]       { border-right-color: var(--taken); }
+.evidence[data-status="not_related"] { border-right-color: var(--not-related); opacity: .65; }
+.evidence[data-status="returned"]    { border-right-color: var(--returned); }
+.evidence[data-status="review"]      { border-right-color: var(--review); }
+
+.ev-header {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.ev-num { font-weight: 700; color: var(--text-3); }
+.ev-meta .ev-date { font-weight: 700; }
+.ev-meta .ev-chat { color: var(--text-3); font-size: 11px; }
+.ev-speaker { font-weight: 600; font-size: 13px; background: #f0ede2; padding: 3px 10px; border-radius: 6px; }
+.ev-amount { font-weight: 800; font-size: 18px; color: var(--taken); font-variant-numeric: tabular-nums; }
+
+.ev-tags { margin: 4px 0 8px; }
+.tag {
+  display: inline-block;
+  background: #f0ede2;
+  color: var(--text-2);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-inline-end: 4px;
+}
+
+.ev-quote {
+  border-right: 3px solid #ccc;
+  background: #f8f6ef;
+  padding: 10px 14px;
+  margin: 8px 0;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 4px;
+}
+mark { background: #fce28a; padding: 1px 4px; font-weight: 700; border-radius: 2px; }
+
+.reply-banner {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  align-items: flex-start;
+}
+.reply-banner .rb-tag { font-weight: 800; font-size: 12px; flex: 0 0 auto; padding: 1px 7px; border-radius: 3px; }
+.reply-banner.approved   { background: #ddecdb; }
+.reply-banner.approved .rb-tag   { background: #2a6f45; color: white; }
+.reply-banner.denied     { background: #fce4e4; }
+.reply-banner.denied .rb-tag     { background: #c92a2a; color: white; }
+.reply-banner.ambiguous  { background: #fff5d6; }
+.reply-banner.ambiguous .rb-tag  { background: #b48700; color: white; }
+.reply-banner.unclear    { background: #ececec; }
+.reply-banner.unclear .rb-tag    { background: #6b6b6b; color: white; }
+.reply-banner.no_reply   { background: #f3e9d8; }
+.reply-banner.no_reply .rb-tag   { background: #8a6b1f; color: white; }
+.reply-banner .rb-body { flex: 1; color: #444; }
+.reply-banner .rb-meta { font-size: 11px; color: #888; margin-bottom: 2px; }
+.req-pill {
+  display: inline-block;
+  background: #f0e0c8;
+  color: #7a4d10;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  margin-inline-start: 6px;
+}
+
+.source-pill {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  margin-inline-start: 6px;
+}
+.source-pill.text  { background: #d6e7f5; color: #1c4f7c; }
+.source-pill.audio { background: #f0e0d6; color: #8c4d1a; }
+
+.audio-block {
+  background: #fff7f0;
+  border: 1px solid #f0d6c0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.audio-block .a-meta { color: #8c4d1a; font-weight: 600; flex: 1; }
+.audio-block audio { height: 30px; }
+.audio-note {
+  font-size: 11px;
+  color: #b48700;
+  background: #fff8dc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.ev-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  align-items: center;
+}
+.status-btn {
+  background: white;
+  border: 1.5px solid var(--line);
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.status-btn:hover { background: #f5f3eb; }
+.status-btn.active.taken       { background: var(--taken);       color: white; border-color: var(--taken); }
+.status-btn.active.not_related { background: var(--not-related); color: white; border-color: var(--not-related); }
+.status-btn.active.returned    { background: var(--returned);    color: white; border-color: var(--returned); }
+.status-btn.active.review      { background: var(--review);      color: white; border-color: var(--review); }
+.status-btn .icon { font-size: 14px; }
+
+.note-input {
+  flex: 1;
+  min-width: 160px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+}
+.note-input:focus { outline: none; border-color: var(--text); }
+.cat-select {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+.cat-select:focus { outline: none; border-color: var(--text); }
+
+details summary { cursor: pointer; color: var(--text-3); font-size: 12px; margin-top: 6px; }
+.ev-ctx { background: #f9f8f3; border-radius: 4px; padding: 8px 12px; margin-top: 6px; font-size: 12px; }
+.ctx-line { padding: 3px 0; border-bottom: 1px dashed #ddd; }
+.ctx-line:last-child { border-bottom: 0; }
+.ctx-line.this { background: #fff5d6; padding: 5px 8px; margin: 4px -8px; border-radius: 3px; }
+.ctx-meta { color: var(--text-3); margin-inline-end: 6px; font-weight: 600; }
+
+.topbar {
+  background: #1a1a1a;
+  color: white;
+  padding: 14px 20px;
+  margin: 0 0 12px;
+}
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 980px; margin: 0 auto; gap: 14px; }
+.topbar a, .topbar button {
+  color: white;
+  text-decoration: none;
+  background: rgba(255,255,255,.12);
+  border: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+
+.empty, .loading { padding: 40px; text-align: center; color: var(--text-3); }
+.toast {
+  position: fixed;
+  bottom: 24px;
+  inset-inline: 24px;
+  max-width: 360px;
+  margin: 0 auto;
+  background: #1a1a1a;
+  color: white;
+  font-size: 13px;
+  padding: 11px 16px;
+  border-radius: 8px;
+  z-index: 100;
+  text-align: center;
+  transition: opacity .2s, transform .2s;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media print {
+  body { background: white; }
+  .topbar, .filter-bar, .ev-actions, details, .toast { display: none !important; }
+  .evidence { break-inside: avoid; box-shadow: none; }
+  .evidence[data-status="not_related"], .evidence[data-status="review"] { display: none; }
+  .container { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>תיק ראיות — תנועות מזומן מצ'אטי וואטסאפ</h1>
+    <div>
+      <a href="/">← חזרה לדוח הראשי</a>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<div id="summary">
+  <div class="loading">טוען...</div>
+</div>
+
+<h2>סינון</h2>
+<div class="filter-bar" id="filterBar"></div>
+
+<h2>פריטי ראיה</h2>
+<div id="evidenceList"></div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const STATUS_DEFS = {
+  taken:       { he: 'נלקח',         icon: '✓', cls: 'taken' },
+  not_related: { he: 'לא קשור',      icon: '✕', cls: 'not_related' },
+  returned:    { he: 'מסור / הוחזר', icon: '↩', cls: 'returned' },
+  review:      { he: 'לבדיקה',       icon: '?',      cls: 'review' },
+};
+const STATUS_ORDER = ['taken','returned','review','not_related'];
+
+const CATEGORY_DEFS = {
+  salary:        { he: 'משכורת עובדים' },
+  store:         { he: 'הוצאות חנות' },
+  returned_cash: { he: 'כסף שחזר' },
+  change:        { he: 'עודף' },
+  maintenance:   { he: 'תחזוקה' },
+  loan:          { he: 'הלוואה / משיכת בעלים' },
+  other:         { he: 'אחר' },
+};
+const CATEGORY_ORDER = ['salary','store','returned_cash','change','maintenance','loan','other'];
+
+const state = { data: null, filter: 'all' };
+
+const fmt = n => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 }).format(Math.round((n + Number.EPSILON) * 100) / 100);
+const fmtDate = iso => { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function highlight(text, amounts) {
+  let out = esc(text);
+  for (const a of amounts) {
+    const raw = esc(a.raw);
+    const re = new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    out = out.replace(re, `<mark>${raw}</mark>`);
+  }
+  return out;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 1700);
+}
+
+const REPLY_LABELS = {
+  approved:  { he: 'אושר',           tag: '✓ אושר' },
+  denied:    { he: 'סורב',           tag: '✕ סורב' },
+  ambiguous: { he: 'תשובה מעורפלת',  tag: '⚠ מעורפל' },
+  unclear:   { he: 'תשובה לא מתפרשת', tag: '? לא ברור' },
+  no_reply:  { he: 'ללא תשובה',      tag: '○ ללא תשובה' },
+};
+
+function renderReplyBanner(e) {
+  if (!e.isRequest) return '';
+  if (!e.reply) {
+    return `
+      <div class="reply-banner no_reply">
+        <span class="rb-tag">${REPLY_LABELS.no_reply.tag}</span>
+        <span class="rb-body">${REPLY_LABELS.no_reply.he} בתוך 6 הודעות הבאות.</span>
+      </div>`;
+  }
+  const cls = e.reply.classification;
+  const lbl = REPLY_LABELS[cls];
+  return `
+    <div class="reply-banner ${cls}">
+      <span class="rb-tag">${lbl.tag}</span>
+      <div class="rb-body">
+        <div class="rb-meta">${fmtDate(e.reply.date)} ${e.reply.time} · ${esc(e.reply.speaker)}</div>
+        <div>${esc(e.reply.body)}</div>
+      </div>
+    </div>`;
+}
+
+async function load() {
+  const r = await fetch('/api/case');
+  state.data = await r.json();
+  render();
+}
+
+function render() { renderSummary(); renderFilters(); renderList(); }
+
+function renderSummary() {
+  const t = state.data.live.totals;
+  const reviewCount = state.data.evidence.filter(e => e.status === 'review').length;
+  const takenCount = state.data.evidence.filter(e => e.status === 'taken').length;
+  const notRelCount = state.data.evidence.filter(e => e.status === 'not_related').length;
+  const returnedCount = state.data.evidence.filter(e => e.status === 'returned').length;
+  const net = (t.taken || 0) - (t.returned || 0);
+  let html = `
+    <h2>סיכום חי</h2>
+    <div class="net-card">
+      <div>
+        <div class="nc-label">סך נטו (נלקח − מסור/הוחזר)</div>
+        <div class="nc-val">${fmt(net)} ₪</div>
+      </div>
+      <div class="nc-note">
+        מתעדכן מיידית עם כל סימון. פריטים "לבדיקה" ו"לא קשור" אינם נכללים.
+      </div>
+    </div>
+    <div class="totals">
+      <div class="total-card tc-taken">
+        <div class="label">נלקח</div>
+        <div class="val">${fmt(t.taken)} ₪</div>
+        <div class="count">${takenCount} פריטים</div>
+      </div>
+      <div class="total-card tc-returned">
+        <div class="label">מסור / הוחזר</div>
+        <div class="val">${fmt(t.returned)} ₪</div>
+        <div class="count">${returnedCount} פריטים</div>
+      </div>
+      <div class="total-card tc-review">
+        <div class="label">לבדיקה</div>
+        <div class="val">${fmt(t.review)} ₪</div>
+        <div class="count">${reviewCount} פריטים</div>
+      </div>
+      <div class="total-card tc-not-related">
+        <div class="label">לא קשור</div>
+        <div class="val">${fmt(t.not_related)} ₪</div>
+        <div class="count">${notRelCount} פריטים</div>
+      </div>
+    </div>
+  `;
+
+  // === Category breakdown (only "נלקח" items) ===
+  const byCat = state.data.live.totalsByCat || {};
+  const totalTaken = Object.values(byCat).reduce((s,v) => s+v, 0);
+  if (totalTaken > 0) {
+    html += `
+      <h2>פילוח "נלקח" לפי שיוך</h2>
+      <table>
+        <thead><tr><th>שיוך</th><th>סכום</th><th>אחוז מהנלקח</th></tr></thead>
+        <tbody>
+          ${CATEGORY_ORDER.map(c => {
+            const v = byCat[c] || 0;
+            if (v === 0) return '';
+            const pct = (v / totalTaken * 100).toFixed(1);
+            return `<tr>
+              <td><strong>${CATEGORY_DEFS[c].he}</strong></td>
+              <td class="num taken">${fmt(v)} ₪</td>
+              <td class="num">${pct}%</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  if (state.data.live.byYear?.length) {
+    html += `
+      <h2>פילוח לפי שנה (לפי סטטוס)</h2>
+      <table>
+        <thead><tr>
+          <th>שנה</th><th>נלקח</th><th>מסור/הוחזר</th><th>לבדיקה</th><th>לא קשור</th><th>נטו</th><th>פריטים</th>
+        </tr></thead>
+        <tbody>
+          ${state.data.live.byYear.map(y => {
+            const yNet = (y.taken || 0) - (y.returned || 0);
+            return `<tr>
+              <td><strong>${y.year}</strong></td>
+              <td class="num taken">${fmt(y.taken)}</td>
+              <td class="num returned">${fmt(y.returned)}</td>
+              <td class="num review">${fmt(y.review)}</td>
+              <td class="num not_related">${fmt(y.not_related)}</td>
+              <td class="num">${fmt(yNet)}</td>
+              <td>${y.count}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  document.getElementById('summary').innerHTML = html;
+}
+
+function renderFilters() {
+  const counts = { all: state.data.evidence.length };
+  for (const s of STATUS_ORDER) counts[s] = state.data.evidence.filter(e => e.status === s).length;
+  const html = `
+    <button class="chip ${state.filter === 'all' ? 'active' : ''}" data-f="all">הכל <span class="badge">${counts.all}</span></button>
+    ${STATUS_ORDER.map(s => `
+      <button class="chip ${state.filter === s ? 'active' : ''}" data-f="${s}">${STATUS_DEFS[s].icon} ${STATUS_DEFS[s].he} <span class="badge">${counts[s]}</span></button>
+    `).join('')}
+  `;
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = html;
+  bar.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    state.filter = c.dataset.f;
+    render();
+  }));
+}
+
+function renderList() {
+  const items = state.filter === 'all'
+    ? state.data.evidence
+    : state.data.evidence.filter(e => e.status === state.filter);
+
+  if (!items.length) {
+    document.getElementById('evidenceList').innerHTML = '<div class="empty">אין פריטים בסינון זה</div>';
+    return;
+  }
+
+  const html = items.map((e) => {
+    const realI = state.data.evidence.indexOf(e) + 1;
+    const tags = e.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('');
+    const buttons = STATUS_ORDER.map(s => `
+      <button class="status-btn ${STATUS_DEFS[s].cls} ${e.status === s ? 'active' : ''}" data-id="${esc(e.id)}" data-status="${s}">
+        <span class="icon">${STATUS_DEFS[s].icon}</span>${STATUS_DEFS[s].he}
+      </button>
+    `).join('');
+    const contextHtml = e.context.map(c => `
+      <div class="ctx-line ${c.isThis ? 'this' : ''}">
+        <span class="ctx-meta">${fmtDate(c.date)} ${c.time} ${esc(c.speaker)}:</span>
+        <span>${esc(c.body)}</span>
+      </div>`).join('');
+    return `
+      <div class="evidence" data-status="${e.status}" data-id="${esc(e.id)}">
+        <div class="ev-header">
+          <div class="ev-num">#${realI}</div>
+          <div class="ev-meta">
+            <div class="ev-date">${fmtDate(e.date)} · ${e.time}</div>
+            <div class="ev-chat">${esc(e.chat)}</div>
+          </div>
+          <div class="ev-speaker">
+            ${esc(e.speaker)}
+            <span class="source-pill ${e.source}">${e.source === 'audio' ? '🎤 אודיו' : '📝 טקסט'}</span>
+            ${e.isRequest ? `<span class="req-pill">בקשה</span>` : ''}
+          </div>
+          <div class="ev-amount">${fmt(e.totalAmount)} ₪</div>
+        </div>
+        ${tags ? `<div class="ev-tags">${tags}</div>` : ''}
+        ${e.source === 'audio' ? `
+          <div class="audio-note">⚠ ${esc(e.transcriptNote || '')}</div>
+          <div class="audio-block">
+            <div class="a-meta">📁 ${esc(e.audioFile)} (${e.audioDuration}s)</div>
+            <audio controls preload="none" src="/api/audio/${encodeURIComponent(e.audioFile)}"></audio>
+          </div>
+        ` : ''}
+        <div class="ev-quote">${highlight(e.body, e.amounts)}</div>
+        ${renderReplyBanner(e)}
+        <div class="ev-actions">
+          ${buttons}
+          <select class="cat-select" data-id="${esc(e.id)}">
+            ${CATEGORY_ORDER.map(c => `<option value="${c}" ${e.category===c?'selected':''}>${CATEGORY_DEFS[c].he}</option>`).join('')}
+          </select>
+          <input class="note-input" data-id="${esc(e.id)}" placeholder="הערה (אופציונלי)..." value="${esc(e.userNote || '')}">
+        </div>
+        <details>
+          <summary>הצג הקשר (2 הודעות לפני / 2 אחרי)</summary>
+          <div class="ev-ctx">${contextHtml}</div>
+        </details>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('evidenceList').innerHTML = html;
+
+  document.querySelectorAll('.status-btn').forEach(b => {
+    b.addEventListener('click', async () => {
+      const id = b.dataset.id;
+      const status = b.dataset.status;
+      const item = state.data.evidence.find(x => x.id === id);
+      if (!item) return;
+      const oldStatus = item.status;
+      const oldAmt = item.totalAmount;
+      state.data.live.totals[oldStatus] -= oldAmt;
+      state.data.live.totals[status] += oldAmt;
+      const yr = item.date.slice(0,4);
+      const y = state.data.live.byYear.find(yy => yy.year === yr);
+      if (y) { y[oldStatus] -= oldAmt; y[status] += oldAmt; }
+      item.status = status;
+      render();
+      try {
+        await fetch(`/api/case/items/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ status }),
+        });
+        showToast(`סומן: ${STATUS_DEFS[status].he}`);
+      } catch (e) { showToast('שגיאת שמירה'); }
+    });
+  });
+
+  document.querySelectorAll('.cat-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.id;
+      const category = sel.value;
+      const item = state.data.evidence.find(x => x.id === id);
+      if (!item) return;
+      const oldCat = item.category;
+      item.category = category;
+      if (item.status === 'taken') {
+        state.data.live.totalsByCat[oldCat] = (state.data.live.totalsByCat[oldCat] || 0) - item.totalAmount;
+        state.data.live.totalsByCat[category] = (state.data.live.totalsByCat[category] || 0) + item.totalAmount;
+        const y = state.data.live.byYear.find(yy => yy.year === item.date.slice(0,4));
+        if (y) {
+          y.byCategory[oldCat] = (y.byCategory[oldCat] || 0) - item.totalAmount;
+          y.byCategory[category] = (y.byCategory[category] || 0) + item.totalAmount;
+        }
+      }
+      renderSummary();
+      try {
+        await fetch(`/api/case/items/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ category }),
+        });
+        showToast(`שיוך: ${CATEGORY_DEFS[category].he}`);
+      } catch (e) { showToast('שגיאת שמירה'); }
+    });
+  });
+
+  document.querySelectorAll('.note-input').forEach(input => {
+    input.addEventListener('blur', async () => {
+      const id = input.dataset.id;
+      const item = state.data.evidence.find(x => x.id === id);
+      if (!item) return;
+      if ((item.userNote || '') === input.value) return;
+      item.userNote = input.value;
+      try {
+        await fetch(`/api/case/items/${encodeURIComponent(id)}`, {
+          method: 'PUT', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ note: input.value }),
+        });
+        showToast('הערה נשמרה');
+      } catch (e) { showToast('שגיאת שמירה'); }
+    });
+  });
+}
+
+load();
+</script>
+</body>
+</html>
