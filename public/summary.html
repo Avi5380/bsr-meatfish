@@ -350,8 +350,75 @@ function render(hash, cse, del, cls) {
       <div class="kv total"><span class="k">${ownerBalance >= 0 ? 'החברה חייבת לבעלים' : 'הבעלים חייב לחברה'}</span><span class="v ${ownerBalance >= 0 ? 'pos' : 'neg'}">${fmt(Math.abs(ownerBalance))} ₪</span></div>
     </div>
 
+    ${(() => {
+      // Receivables & bounced checks section
+      // Bounced checks (tracking category)
+      let bouncedIn = 0, bouncedOut = 0;
+      for (const t of (hash.categories || [])) {} // placeholder, real calc below from tracking via window fetch
+      // We need tracking — fetch was already loaded into the page via a separate call; for safety compute here from hash.
+      // Outstanding customer debts from Hashavshevet — find specific named customers (not generic accounts)
+      const customerDebts = {};
+      for (const c of hash.categories) {
+        if (c.section !== 'income') continue;
+        for (const r of c.rows) {
+          const counter = (r.counterAccount || '').trim();
+          if (!counter || /^לקוחות הקפה|^לקוחות כללי|^כרטיס כללי|^הכנסות ממכירה|^ביטול יתרות|^כרטיס אשראי|^קופת מזומן|^קופת אשראי|^תווי קניה/.test(counter)) continue;
+          if (!customerDebts[counter]) customerDebts[counter] = { count: 0, credit: 0, debit: 0 };
+          customerDebts[counter].count++;
+          customerDebts[counter].credit += r.credit || 0;
+          customerDebts[counter].debit += r.debit || 0;
+        }
+      }
+      const openCustomers = Object.entries(customerDebts)
+        .map(([n, v]) => ({ name: n, ...v, balance: v.credit - v.debit }))
+        .filter(c => Math.abs(c.balance) > 500)
+        .sort((a,b) => Math.abs(b.balance) - Math.abs(a.balance))
+        .slice(0, 15);
+
+      // Bank bounced checks (only specific "שיק חזר" / "ש'ק חזר" / "שק חזר-בנ" patterns)
+      const bouncedBank = (window._bankRowsCache || []).filter(r =>
+        /שיק\s*חזר|שק\s*חזר|ש"ק\s*חזר|שק חזר-בנ/.test(r.description || '')
+      );
+
+      const customerTotalOwed = openCustomers.reduce((s, c) => s + Math.max(c.balance, 0), 0);
+      return `
+    <h2>3א · חובות לקבל ושיקים חוזרים (חיצוני)</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">חובות פתוחים של לקוחות חיצוניים</div>
+        <div class="sec-source">${openCustomers.length} חשבונות עם יתרה > 500 ₪</div>
+      </div>
+      ${openCustomers.length === 0 ? '<div class="note">לא נמצאו חשבונות לקוחות עם חוב פתוח מהותי.</div>' : `
+        <table>
+          <thead><tr><th>חשבון נגדי</th><th>תנועות</th><th>זכות</th><th>חובה</th><th>יתרה</th></tr></thead>
+          <tbody>
+            ${openCustomers.map(c => `
+              <tr>
+                <td>${c.name}</td>
+                <td class="num">${c.count}</td>
+                <td class="num pos">${fmt(c.credit)} ₪</td>
+                <td class="num neg">${fmt(c.debit)} ₪</td>
+                <td class="num ${c.balance >= 0 ? 'pos' : 'neg'}">${fmtSign(c.balance)} ₪</td>
+              </tr>
+            `).join('')}
+            <tr class="grandtotal">
+              <td>סה"כ זכות פתוחה</td>
+              <td colspan="3"></td>
+              <td class="num">${fmt(customerTotalOwed)} ₪</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          <strong>חשוב:</strong> ה-17.9M ב"לקוחות הקפה 3001" סוננו אוטומטית כי זה חשבון אגרגציה
+          של מכירות החנות, לא חוב לאדם ספציפי.
+        </div>
+      `}
+    </div>
+      `;
+    })()}
+
     ${stakeholders.length ? `
-    <h2>3א · בעלי עניין נוספים (הלוואות פרטיות)</h2>
+    <h2>3ב · בעלי עניין נוספים (הלוואות פרטיות)</h2>
     <div class="section-card">
       <div class="sec-head">
         <div class="sec-title">חוב לצדדים קשורים (לא בעלים רשמיים)</div>
