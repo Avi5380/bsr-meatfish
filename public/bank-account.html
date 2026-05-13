@@ -431,7 +431,22 @@ function renderTransactions(allRows) {
         </div>
       `;
     } else {
-      matchHtml = '<span style="color:#ccc; font-size:11px">—</span>';
+      const reasonLabels = {
+        after_tracking:           '⚠ אחרי תקופת המעקב',
+        before_tracking:          '⚠ לפני תקופת המעקב',
+        amount_never_appears:     '✕ הסכום לא קיים במעקב',
+        opposite_direction_only:  '✕ קיים בכיוון הפוך',
+        no_tracking:              '⚠ אין מעקב',
+      };
+      let reason = r.noMatchReason || '';
+      let label = reasonLabels[reason] || '';
+      if (!label && reason && reason.startsWith('closest_')) {
+        const days = reason.replace('closest_', '');
+        label = `~ קיים ב-${days} ימים מרחק`;
+      }
+      matchHtml = label
+        ? `<span style="color:#a04545; font-size:11px; font-weight:600">${label}</span>`
+        : '<span style="color:#ccc; font-size:11px">—</span>';
     }
     return `
       <tr class="${r.flagged ? 'flagged' : ''} ${hasMatch ? 'matched' : ''}">

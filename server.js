@@ -428,19 +428,22 @@ function getTrackingIndex() {
 }
 
 // Match a bank row to tracking rows
-// match = same date ±7 days, same absolute amount (with tolerance), correct direction
+// match = same date ±30 days, same absolute amount, correct direction
+const MATCH_DAY_TOLERANCE = 30;
+const TRACKING_START_DATE = '2021-04-07';
+const TRACKING_END_DATE   = '2024-12-31';
 function findTrackingMatches(bankRow, idx) {
-  if (!idx) return [];
+  if (!idx) return { matches: [], reason: 'no_tracking' };
   const amount = bankRow.credit > 0 ? bankRow.credit : bankRow.debit;
   const bankDirection = bankRow.credit > 0 ? 'in' : 'out';
   const key = amount.toFixed(2);
   const candidates = idx.byAmount.get(key) || [];
   const bankDateMs = new Date(bankRow.date).getTime();
-  return candidates
+  const matches = candidates
     .filter(t => t.direction === bankDirection)
     .filter(t => {
       const dt = new Date(t.payDate).getTime();
-      return Math.abs(dt - bankDateMs) <= 7 * 86400000;
+      return Math.abs(dt - bankDateMs) <= MATCH_DAY_TOLERANCE * 86400000;
     })
     .map(t => ({
       id: t.id,
@@ -455,6 +458,32 @@ function findTrackingMatches(bankRow, idx) {
       dayDiff: Math.round((new Date(t.payDate).getTime() - bankDateMs) / 86400000),
     }))
     .sort((a, b) => Math.abs(a.dayDiff) - Math.abs(b.dayDiff));
+
+  // If no match — produce a clear reason
+  let reason = null;
+  if (matches.length === 0) {
+    if (bankRow.date > TRACKING_END_DATE) {
+      reason = 'after_tracking';
+    } else if (bankRow.date < TRACKING_START_DATE) {
+      reason = 'before_tracking';
+    } else if (candidates.length === 0) {
+      reason = 'amount_never_appears';
+    } else {
+      // Amount appears in tracking, but no match within ±30d. Find the closest.
+      const directionalCandidates = candidates.filter(t => t.direction === bankDirection);
+      if (directionalCandidates.length === 0) {
+        reason = 'opposite_direction_only';
+      } else {
+        let closest = null;
+        for (const t of directionalCandidates) {
+          const diff = Math.abs(new Date(t.payDate).getTime() - bankDateMs) / 86400000;
+          if (!closest || diff < closest) closest = diff;
+        }
+        reason = `closest_${Math.round(closest)}d`;
+      }
+    }
+  }
+  return { matches, reason };
 }
 
 app.get('/api/tracking', (_req, res) => {
@@ -508,9 +537,11 @@ function buildBanksView() {
     r.classification = ov.classification || null;
     r.note           = ov.note           || '';
     r.flagged        = !!ov.flagged;
-    // Attach tracking matches
-    r.trackingMatches = findTrackingMatches(r, trkIdx);
-    if (r.trackingMatches.length > 0) matchedCount++;
+    // Attach tracking matches with reason for no-match
+    const { matches, reason } = findTrackingMatches(r, trkIdx);
+    r.trackingMatches = matches;
+    r.noMatchReason = matches.length === 0 ? reason : null;
+    if (matches.length > 0) matchedCount++;
   }
   data.matchedRowCount = matchedCount;
   return data;
