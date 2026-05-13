@@ -177,6 +177,21 @@ function render(hash, cse, del, cls) {
   // owner_balance < 0 => owner took more than gave (owner owes company)
   const ownerBalance = ownerCredit - ownerDebit;
 
+  // Stakeholders (בעלי עניין נוספים) — private loans from related individuals.
+  // Each stakeholder gets its own subtotal so we can see exposure per person.
+  const STAKEHOLDER_GROUPS = [
+    { label: 'נפתלי הרצל',  match: /^הלוואה הרצל נפתלי/ },
+    { label: 'מני (מנחם מנדל) הרצל', match: /^הלוואה הרצל מני/ },
+  ];
+  const stakeholders = STAKEHOLDER_GROUPS.map(g => {
+    const cats = hash.categories.filter(c => g.match.test(c.name));
+    let credit = 0, debit = 0;
+    for (const c of cats) { credit += c.totals.credit; debit += c.totals.debit; }
+    return { label: g.label, credit, debit, balance: credit - debit, cats: cats.map(c => c.name) };
+  }).filter(s => s.cats.length > 0);
+  const stakeholdersTotalBalance = stakeholders.reduce((s, x) => s + x.balance, 0);
+  const totalCompanyOwes = ownerBalance + stakeholdersTotalBalance; // combined exposure to related parties
+
   // ============ 2. CASE FILE (cash from chats) ============
   const cashTaken    = cse.live.totals.taken;
   const cashReturned = cse.live.totals.returned;
@@ -328,12 +343,42 @@ function render(hash, cse, del, cls) {
     <div class="section-card">
       <div class="sec-head">
         <div class="sec-title">תזרים בעלים</div>
-        <div class="sec-source">${ownerCats.length} קבצי בעלים</div>
+        <div class="sec-source">${ownerCats.length} קטגוריות (בעלים + חוז)</div>
       </div>
       <div class="kv"><span class="k">סך זכות (החברה קיבלה מהבעלים)</span><span class="v pos">${fmt(ownerCredit)} ₪</span></div>
       <div class="kv"><span class="k">סך חובה (הבעלים לקח מהחברה)</span><span class="v neg">${fmt(ownerDebit)} ₪</span></div>
       <div class="kv total"><span class="k">${ownerBalance >= 0 ? 'החברה חייבת לבעלים' : 'הבעלים חייב לחברה'}</span><span class="v ${ownerBalance >= 0 ? 'pos' : 'neg'}">${fmt(Math.abs(ownerBalance))} ₪</span></div>
     </div>
+
+    ${stakeholders.length ? `
+    <h2>3א · בעלי עניין נוספים (הלוואות פרטיות)</h2>
+    <div class="section-card">
+      <div class="sec-head">
+        <div class="sec-title">חוב לצדדים קשורים (לא בעלים רשמיים)</div>
+        <div class="sec-source">${stakeholders.length} גורמים</div>
+      </div>
+      <table>
+        <thead><tr><th>שם</th><th>הזרים (זכות)</th><th>הוחזר (חובה)</th><th>יתרה</th></tr></thead>
+        <tbody>
+          ${stakeholders.map(s => `
+            <tr>
+              <td><strong>${s.label}</strong></td>
+              <td class="num pos">${fmt(s.credit)} ₪</td>
+              <td class="num neg">${fmt(s.debit)} ₪</td>
+              <td class="num ${s.balance >= 0 ? 'pos' : 'neg'}">${fmtSign(s.balance)} ₪</td>
+            </tr>
+          `).join('')}
+          <tr class="grandtotal">
+            <td>סה"כ בעלי עניין</td>
+            <td class="num">${fmt(stakeholders.reduce((s,x)=>s+x.credit,0))}</td>
+            <td class="num">${fmt(stakeholders.reduce((s,x)=>s+x.debit,0))}</td>
+            <td class="num">${fmtSign(stakeholdersTotalBalance)} ₪</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">סך החברה חייבת לבעלים + לבעלי עניין: <strong>${fmt(totalCompanyOwes)} ₪</strong></div>
+    </div>
+    ` : ''}
 
     <h2>4 · מזומן לא מדווח (מצ'אטים)</h2>
     <div class="section-card">
