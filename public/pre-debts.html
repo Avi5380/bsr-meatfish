@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חובות פר-07/2021 + מעקב מוטי</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --pos: #2a6f45;
+  --neg: #c92a2a;
+  --warn: #b48700;
+}
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; gap: 14px; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 30px; margin: 0 0 6px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 18px; }
+h2 { font-family: 'Frank Ruhl Libre', serif; font-size: 22px; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+h3 { font-size: 16px; margin: 18px 0 8px; color: #444; }
+
+.headline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 16px 0; }
+.hl-card { background: #1a1a1a; color: white; border-radius: 10px; padding: 16px 18px; text-align: center; }
+.hl-card .label { font-size: 12px; opacity: .7; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.hl-card .val { font-size: 24px; font-weight: 900; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.hl-card .sub { font-size: 11px; opacity: .6; margin-top: 4px; }
+.hl-card.neg .val { color: #ff6b5b; }
+.hl-card.pos .val { color: #4ade80; }
+.hl-card.warn .val { color: #fbbf24; }
+
+.section-card { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; margin: 14px 0; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 8px 0 14px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+th { background: #efebe2; font-weight: 700; font-size: 11px; }
+td.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+td.num.pos { color: var(--pos); }
+td.num.neg { color: var(--neg); }
+tr.grandtotal td { background: #1a1a1a; color: white; font-weight: 800; }
+tr:hover td { background: #f8f6ef; }
+tr.alert td { background: #fff8dc; }
+
+.note { background: #fff5d6; border: 1px solid #d4a800; border-right: 4px solid #d4a800; padding: 10px 14px; border-radius: 6px; margin: 8px 0; font-size: 12px; color: #5a4500; }
+.pair { background: #f0e0c8; border-right: 3px solid #b48700; padding: 6px 10px; margin: 4px 0; border-radius: 4px; font-size: 12px; }
+.pair strong { color: #7a4d10; }
+
+.tab-toggle { display: flex; gap: 8px; margin: 12px 0; }
+.tab-toggle button { padding: 10px 16px; border: 1px solid var(--line); background: white; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700; border-radius: 8px; }
+.tab-toggle button.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+
+.loading { padding: 60px; text-align: center; color: var(--text-3); }
+.spinner { display: inline-block; width: 26px; height: 26px; border: 3px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .topbar, .tab-toggle button { display: none; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>חובות פר-07/2021 + מעקב מוטי</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/summary.html">דוח סיכום</a>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">חובות שנוצרו לפני 07/2021 + שורות מסומנות "מוטי"</h1>
+<div class="subtitle" id="meta">טוען...</div>
+
+<div id="content"><div class="loading"><div class="spinner"></div></div></div>
+
+</div>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString('he-IL');
+const fmtSign = n => (n >= 0 ? '+' : '') + fmt(n);
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const CUTOFF = '2021-08-01';
+const SKIP_COUNTER = /^כרטיס כללי|^בנק|^קופה|^כרטיס אשראי|^הוצאות|^עלות|^ביטול יתרות|^חברת חשמל|^מע"מ|^הכנסות|^לקוחות|^שכר|^עתודה|^ביטוח לאומי|^מס הכנסה|^עמלת|^העברה|^ריבית|^גמ"ח|^הלוואה/;
+const REFUND_RE = /זיכוי|זק"ה|חזרת חיוב|זיכ\.|חזרה|ביטול/;
+
+function isMoti(text) {
+  if (!text) return false;
+  return /(^|\s|-|\.|,|"|')מוטי(\s|$|-|\.|,|"|')/.test(text);
+}
+
+async function load() {
+  const [hashR, trkR] = await Promise.all([
+    fetch('/api/data').then(r => r.json()),
+    fetch('/api/tracking').then(r => r.json()),
+  ]);
+  render(hashR, trkR);
+}
+
+function render(hash, tracking) {
+  // ===== Pre-7/21 analysis =====
+  const supplierRows = {};
+  for (const c of hash.categories) {
+    if (!['expense', 'related'].includes(c.section)) continue;
+    for (const r of c.rows) {
+      const counter = (r.counterAccount || '').trim();
+      if (!counter || SKIP_COUNTER.test(counter)) continue;
+      if (!supplierRows[counter]) supplierRows[counter] = [];
+      supplierRows[counter].push({ ...r, _cat: c.name });
+    }
+  }
+  const supplierAnalysis = [];
+  for (const [counter, rows] of Object.entries(supplierRows)) {
+    const preInvoices = rows.filter(r => r.valueDate && r.valueDate < CUTOFF && (r.debit || 0) > 0 && !REFUND_RE.test(r.description || ''));
+    if (preInvoices.length === 0) continue;
+    const preTotal = preInvoices.reduce((s, r) => s + r.debit, 0);
+    const allCreditNotes = rows.filter(r => REFUND_RE.test(r.description || '') || (r.credit || 0) > 0 || (r.debit || 0) < 0);
+    const cnTotal = allCreditNotes.reduce((s, r) => s + (r.credit || 0) + Math.abs(Math.min(r.debit || 0, 0)), 0);
+    const lateCNs = allCreditNotes.filter(r => r.valueDate >= CUTOFF);
+    const lateCnTotal = lateCNs.reduce((s, r) => s + (r.credit || 0) + Math.abs(Math.min(r.debit || 0, 0)), 0);
+    const postInvoices = rows.filter(r => r.valueDate >= CUTOFF && (r.debit || 0) > 0 && !REFUND_RE.test(r.description || ''));
+    const postTotal = postInvoices.reduce((s, r) => s + r.debit, 0);
+    supplierAnalysis.push({ counter, preInvoiceCount: preInvoices.length, preInvoiceTotal: preTotal,
+      cnCount: allCreditNotes.length, cnTotal, lateCnCount: lateCNs.length, lateCnTotal,
+      postInvoiceCount: postInvoices.length, postInvoiceTotal: postTotal, rows, lateCNs });
+  }
+  const sortedSup = supplierAnalysis.sort((a, b) => b.preInvoiceTotal - a.preInvoiceTotal);
+  const totalPre = sortedSup.reduce((s, x) => s + x.preInvoiceTotal, 0);
+  const totalLateCN = sortedSup.reduce((s, x) => s + x.lateCnTotal, 0);
+
+  // Find reissue pairs (credit-note after 7/21 + similar new invoice)
+  const allPairs = [];
+  for (const s of sortedSup) {
+    for (const cn of s.lateCNs) {
+      const cnAmt = (cn.credit || 0) + Math.abs(Math.min(cn.debit || 0, 0));
+      if (cnAmt < 500) continue;
+      const cnDate = new Date(cn.valueDate).getTime();
+      const reissue = s.rows.find(r => {
+        if (r === cn) return false;
+        if (!r.valueDate) return false;
+        const rDate = new Date(r.valueDate).getTime();
+        if (Math.abs(rDate - cnDate) > 60 * 86400000) return false;
+        if ((r.debit || 0) <= 0) return false;
+        if (REFUND_RE.test(r.description || '')) return false;
+        return Math.abs(r.debit - cnAmt) < 50;
+      });
+      if (reissue) allPairs.push({ supplier: s.counter, cn, reissue });
+    }
+  }
+  const pairsTotal = allPairs.reduce((s, p) => s + ((p.cn.credit || 0) + Math.abs(Math.min(p.cn.debit || 0, 0))), 0);
+
+  // ===== Moti analysis =====
+  const motiRows = tracking.rows.filter(r =>
+    isMoti(r.category) || isMoti(r.details) || isMoti(r.notes) || isMoti(r.supplier)
+  );
+  let motiIn = 0, motiOut = 0;
+  for (const r of motiRows) { if (r.direction === 'in') motiIn += Math.abs(r.amount); else motiOut += Math.abs(r.amount); }
+  const motiByCat = {};
+  for (const r of motiRows) {
+    if (!motiByCat[r.topCat]) motiByCat[r.topCat] = { count: 0, in: 0, out: 0 };
+    motiByCat[r.topCat].count++;
+    if (r.direction === 'in') motiByCat[r.topCat].in += Math.abs(r.amount);
+    else motiByCat[r.topCat].out += Math.abs(r.amount);
+  }
+  const motiByYear = {};
+  for (const r of motiRows) {
+    const yr = r.payDate.slice(0, 4);
+    if (!motiByYear[yr]) motiByYear[yr] = { count: 0, in: 0, out: 0 };
+    motiByYear[yr].count++;
+    if (r.direction === 'in') motiByYear[yr].in += Math.abs(r.amount);
+    else motiByYear[yr].out += Math.abs(r.amount);
+  }
+
+  document.getElementById('meta').textContent =
+    `הופק: ${new Date().toLocaleString('he-IL')} · חובות פר-07/21: ${sortedSup.length} ספקים · שורות מוטי: ${motiRows.length}`;
+
+  let html = `
+    <div class="headline-grid">
+      <div class="hl-card neg">
+        <div class="label">חשבוניות פר-07/2021</div>
+        <div class="val">${fmt(totalPre)} ₪</div>
+        <div class="sub">${sortedSup.length} ספקים</div>
+      </div>
+      <div class="hl-card warn">
+        <div class="label">זיכויים מאוחרים</div>
+        <div class="val">${fmt(totalLateCN)} ₪</div>
+        <div class="sub">הוצאו אחרי 07/21</div>
+      </div>
+      <div class="hl-card warn">
+        <div class="label">זוגות זיכוי→חשבונית-חדשה</div>
+        <div class="val">${allPairs.length}</div>
+        <div class="sub">סה"כ ${fmt(pairsTotal)} ₪</div>
+      </div>
+      <div class="hl-card neg">
+        <div class="label">תשלומים ל"מוטי"</div>
+        <div class="val">${fmt(motiOut)} ₪</div>
+        <div class="sub">${motiRows.length} שורות במעקב</div>
+      </div>
+    </div>
+
+    <h2>חלק א' — חשבוניות שהוצאו לפני 07/2021</h2>
+
+    <div class="section-card">
+      <h3>טבלת ספקים (כל ספק עם חוב פר-7/21)</h3>
+      <table>
+        <thead><tr>
+          <th>ספק</th><th>חשבוניות פר-7/21</th><th>שורות</th>
+          <th>זיכויים (כל)</th><th>זיכויים מאוחרים</th><th>חשבוניות פוסט</th>
+        </tr></thead>
+        <tbody>
+          ${sortedSup.map(s => `
+            <tr class="${s.lateCnTotal > 5000 ? 'alert' : ''}">
+              <td>${esc(s.counter)}</td>
+              <td class="num neg">${fmt(s.preInvoiceTotal)}</td>
+              <td>${s.preInvoiceCount}</td>
+              <td class="num">${fmt(s.cnTotal)}</td>
+              <td class="num" style="color:#b48700">${fmt(s.lateCnTotal)}</td>
+              <td class="num">${fmt(s.postInvoiceTotal)}</td>
+            </tr>
+          `).join('')}
+          <tr class="grandtotal">
+            <td>סה"כ</td>
+            <td class="num">${fmt(totalPre)}</td>
+            <td>${sortedSup.reduce((s,x)=>s+x.preInvoiceCount,0)}</td>
+            <td class="num">${fmt(sortedSup.reduce((s,x)=>s+x.cnTotal,0))}</td>
+            <td class="num">${fmt(totalLateCN)}</td>
+            <td class="num">${fmt(sortedSup.reduce((s,x)=>s+x.postInvoiceTotal,0))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    ${allPairs.length ? `
+    <div class="section-card">
+      <h3>זוגות זיכוי + חשבונית חדשה (תבנית "קיזוז מע"מ")</h3>
+      <div class="note">
+        זיכויים שהונפקו אחרי 07/2021 שמצאתי להם חשבונית חדשה תואמת (סכום זהה ±50, תוך 60 ימים).
+        ${allPairs.length} זוגות, סה"כ ${fmt(pairsTotal)} ₪.
+      </div>
+      <table>
+        <thead><tr>
+          <th>ספק</th><th>תאריך זיכוי</th><th>סכום זיכוי</th>
+          <th>תאריך חשבונית חדשה</th><th>סכום חדש</th><th>תיאור</th>
+        </tr></thead>
+        <tbody>
+          ${allPairs.sort((a,b) => (b.cn.credit || Math.abs(b.cn.debit||0)) - (a.cn.credit || Math.abs(a.cn.debit||0))).slice(0, 50).map(p => {
+            const cnAmt = (p.cn.credit || 0) + Math.abs(Math.min(p.cn.debit || 0, 0));
+            return `<tr>
+              <td>${esc(p.supplier).slice(0, 28)}</td>
+              <td>${esc(p.cn.valueDate)}</td>
+              <td class="num" style="color:#b48700">${fmt(cnAmt)}</td>
+              <td>${esc(p.reissue.valueDate)}</td>
+              <td class="num">${fmt(p.reissue.debit || 0)}</td>
+              <td style="font-size:11px; color:#666">${esc(p.cn.description || '').slice(0, 50)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      ${allPairs.length > 50 ? `<div class="note">מציג 50 ראשונים מתוך ${allPairs.length}</div>` : ''}
+    </div>
+    ` : ''}
+
+    <h2>חלק ב' — שורות מסומנות "מוטי" (כל התקופה)</h2>
+
+    <div class="section-card">
+      <h3>סיכום</h3>
+      <table style="max-width:500px">
+        <tr><td>סך נכנס</td><td class="num pos">${fmt(motiIn)} ₪</td></tr>
+        <tr><td>סך יצא</td><td class="num neg">${fmt(motiOut)} ₪</td></tr>
+        <tr class="grandtotal"><td>נטו</td><td class="num">${fmtSign(motiIn - motiOut)} ₪</td></tr>
+      </table>
+
+      <h3>פילוח לפי קטגוריה</h3>
+      <table>
+        <thead><tr><th>קטגוריה</th><th>שורות</th><th>נכנס</th><th>יצא</th></tr></thead>
+        <tbody>
+          ${Object.entries(motiByCat).sort((a,b) => (b[1].in+b[1].out) - (a[1].in+a[1].out)).map(([c, v]) => `
+            <tr>
+              <td>${esc(c)}</td>
+              <td>${v.count}</td>
+              <td class="num pos">${fmt(v.in)}</td>
+              <td class="num neg">${fmt(v.out)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <h3>פילוח לפי שנה</h3>
+      <table>
+        <thead><tr><th>שנה</th><th>שורות</th><th>נכנס</th><th>יצא</th><th>נטו</th></tr></thead>
+        <tbody>
+          ${Object.entries(motiByYear).sort().map(([yr, v]) => `
+            <tr>
+              <td><strong>${yr}</strong></td>
+              <td>${v.count}</td>
+              <td class="num pos">${fmt(v.in)}</td>
+              <td class="num neg">${fmt(v.out)}</td>
+              <td class="num ${v.in - v.out >= 0 ? 'pos' : 'neg'}">${fmtSign(v.in - v.out)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <h3>כל ${motiRows.length} השורות עם "מוטי"</h3>
+      <table>
+        <thead><tr>
+          <th>תאריך</th><th>קטגוריה</th><th>פרטים</th><th>נכנס</th><th>יצא</th>
+        </tr></thead>
+        <tbody>
+          ${motiRows.sort((a,b) => a.payDate.localeCompare(b.payDate)).map(r => `
+            <tr>
+              <td>${esc(r.payDate)}</td>
+              <td style="font-size:11px">${esc(r.category || '').slice(0, 45)}</td>
+              <td style="font-size:11px; color:#555">${esc(r.details || '').slice(0, 40)}</td>
+              <td class="num pos">${r.direction === 'in' ? fmt(Math.abs(r.amount)) : ''}</td>
+              <td class="num neg">${r.direction === 'out' ? fmt(Math.abs(r.amount)) : ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+load();
+</script>
+</body>
+</html>
