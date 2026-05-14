@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ראיות העסקת מני — שחור מתחילתה</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
+
+* { box-sizing: border-box; }
+:root {
+  --bg: #fafaf7;
+  --card: #ffffff;
+  --line: #e0ddd2;
+  --text: #1a1a1a;
+  --text-2: #555;
+  --text-3: #888;
+  --pos: #2a6f45;
+  --neg: #c92a2a;
+  --warn: #b48700;
+}
+body { font-family: 'Heebo', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.55; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+.topbar { background: #1a1a1a; color: white; padding: 14px 20px; }
+.topbar .row { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; gap: 14px; flex-wrap: wrap; }
+.topbar h1 { font-size: 17px; color: white; font-family: 'Heebo'; margin: 0; }
+.topbar a, .topbar button { color: white; text-decoration: none; background: rgba(255,255,255,.12); border: 0; font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 7px; cursor: pointer; margin: 0 3px; }
+.topbar a:hover, .topbar button:hover { background: rgba(255,255,255,.2); }
+
+h1.report-title { font-family: 'Frank Ruhl Libre', serif; font-size: 30px; margin: 0 0 6px; letter-spacing: -.02em; }
+.subtitle { color: var(--text-2); font-size: 13px; margin-bottom: 18px; }
+h2 { font-family: 'Frank Ruhl Libre', serif; font-size: 22px; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+h3 { font-size: 16px; margin: 18px 0 8px; color: #444; }
+
+.headline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 16px 0; }
+.hl-card { background: #1a1a1a; color: white; border-radius: 10px; padding: 16px 18px; text-align: center; }
+.hl-card .label { font-size: 12px; opacity: .7; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.hl-card .val { font-size: 22px; font-weight: 900; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.hl-card .sub { font-size: 11px; opacity: .6; margin-top: 4px; }
+.hl-card.neg .val { color: #ff6b5b; }
+.hl-card.pos .val { color: #4ade80; }
+.hl-card.warn .val { color: #fbbf24; }
+
+.section-card { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; margin: 14px 0; }
+
+.evidence-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-right: 4px solid #1a1a1a;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  position: relative;
+}
+.evidence-card.critical { border-right-color: #c92a2a; background: #fff8f5; }
+.evidence-card.warn { border-right-color: #b48700; background: #fffdf2; }
+.evidence-card.pos { border-right-color: #2a6f45; background: #f3faf5; }
+.ev-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  margin-bottom: 6px; font-size: 12px; color: var(--text-2);
+}
+.ev-speaker { font-weight: 700; color: var(--text); }
+.ev-speaker.y { color: #2a4f8c; }
+.ev-speaker.m { color: #7a3e10; }
+.ev-body { font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+.ev-body em { background: #fff3a0; padding: 1px 4px; border-radius: 3px; font-style: normal; font-weight: 600; }
+.ev-note {
+  margin-top: 8px; padding: 8px 12px; background: #f0ece2; border-radius: 5px;
+  font-size: 12px; color: #5a4500; border-right: 3px solid #b48700;
+}
+.ev-note strong { color: #1a1a1a; }
+
+.tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; margin-left: 6px;
+}
+.tag.critical { background: #c92a2a; color: white; }
+.tag.warn { background: #b48700; color: white; }
+.tag.info { background: #2a4f8c; color: white; }
+
+.summary-list { font-size: 14px; line-height: 1.8; }
+.summary-list li { margin: 6px 0; }
+.summary-list .num { font-weight: 800; color: var(--neg); }
+
+.note { background: #fff5d6; border: 1px solid #d4a800; border-right: 4px solid #d4a800; padding: 12px 16px; border-radius: 6px; margin: 12px 0; font-size: 13px; color: #5a4500; line-height: 1.65; }
+
+@media print {
+  .topbar, .tab-toggle button { display: none; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="row">
+    <h1>ראיות העסקת מני — שחור מתחילתה</h1>
+    <div>
+      <a href="/">← דוח ראשי</a>
+      <a href="/summary.html">דוח סיכום</a>
+      <a href="/pre-debts.html">חובות פר-7/21</a>
+      <button onclick="window.print()">הדפסה</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<h1 class="report-title">ראיות העסקת מני שחור מתחילת השותפות</h1>
+<div class="subtitle" id="meta">מתוך התכתבות וואטסאפ עם "מני גולד פיש" — חיבור ראייתי לבית דין</div>
+
+<div class="headline-grid">
+  <div class="hl-card neg">
+    <div class="label">הודעה ראשונה</div>
+    <div class="val">27.08.2021</div>
+    <div class="sub">"נתקעתי בלי כסף" — לקיחה ע"ח משכורת</div>
+  </div>
+  <div class="hl-card warn">
+    <div class="label">חוב פתוח באוקטובר 21</div>
+    <div class="val">7,000 ₪</div>
+    <div class="sub">חוב שצמח לפני 1.7.2021</div>
+  </div>
+  <div class="hl-card neg">
+    <div class="label">תלוש מסודר ראשון</div>
+    <div class="val">01.01.2023</div>
+    <div class="sub">~1.5 שנים ללא תיעוד פורמלי</div>
+  </div>
+  <div class="hl-card warn">
+    <div class="label">חוב פתוח 04/2026</div>
+    <div class="val">88,290 ₪</div>
+    <div class="sub">"חוב כללי" — מחוץ למשכורת חדשה</div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>תקציר ממצאים:</strong> מני הרצל היה עובד פעיל בבשר ודגים <em style="background:#fff3a0; padding:0 4px">לפני</em> מועד תחילת השותפות (7/2021).
+  לאורך כל השנים הראשונות, המשכורות שולמו לסירוגין במזומן מהקופה, לעיתים תוך
+  הפיכת החוב לקרן אשראי שניתן להעביר ממנו לצדדים שלישיים.
+  תלוש משכורת רשמי הוצא לראשונה רק ב-1.1.2023. עדויות עצמיות של מני (5.5.2026)
+  מאשרות שהמודל היה "לקיחת כסף מהקופה" ולא משכורת מובנית.
+</div>
+
+<h2>חלק א' — ראיות-מפתח (מסודרות לפי כובד)</h2>
+
+<div class="evidence-card critical">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 27.08.2021 · 12:40</span>
+    <span class="tag critical">ראיה מס' 1 — הודעה ראשונה</span>
+  </div>
+  <div class="ev-body">מה נשמע? זה מני הרצל <em>נתקעתי בלי כסף עכשיו, אני יוכל לקחת מהקופה 200 שקל ואני יוריד מהמשכורת?</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> ההודעה הראשונה ב-WhatsApp (פתיחת התקשורת) — מני מתייחס למשכורת קיימת
+    ומבקש למשוך מהקופה. <strong>כלומר הוא היה עובד פעיל לפני התאריך הזה.</strong>
+    <br>תאריך תחילת השותפות בבשר ודגים: 1.7.2021 — פחות מ-8 שבועות לפני ההודעה.
+  </div>
+</div>
+
+<div class="evidence-card critical">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 21.10.2021 · 19:46</span>
+    <span class="tag critical">ראיה מס' 2 — חוב פתוח קיים</span>
+  </div>
+  <div class="ev-body"><em>שולם אוגוסט ו-1000 מהחוב / נשאר 6000 בחוב</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> באוקטובר 2021 יש כבר "חוב" של 7,000 ₪ למני (6,000 + 1,000 ששולמו).
+    החוב הוא מצטבר ולא נופל לקטגוריה של משכורת חודשית — זה תיעוד-מסך של
+    יחסי עבודה לא רשמיים, שצמחו <strong>לפני</strong> השותפות החדשה.
+  </div>
+</div>
+
+<div class="evidence-card warn">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 09.09.2021 · 16:17</span>
+    <span class="tag warn">ראיה מס' 3</span>
+  </div>
+  <div class="ev-body">מה קורה? <em>מתי אתה רוצה לשבת על המשכורת?</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> "לשבת על המשכורת" — אד-הוק, פגישה פיזית להעברת מזומן.
+    זה לא ניסוח של עובד שכיר מסודר. בהמשך אותו היום: מני מגיע פיזית לבית של בעל החברה
+    בפחד יצחק 9 בשעה 21:25 ומעביר כספים — "נשאר 4.900 / + 7560 / סהכ 12460".
+  </div>
+</div>
+
+<div class="evidence-card warn">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 08.11.2021 · 14:12</span>
+    <span class="tag warn">ראיה מס' 4</span>
+  </div>
+  <div class="ev-body">מה קורה? <em>מתי נדבר על המשכורת של החודש וחצי האחרונים?</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> חודש וחצי ללא משכורת, ללא תלוש, ללא הסדר. המודל הוא
+    "נדבר על המשכורת" — מו"מ על סכום אד-הוק כל פעם.
+  </div>
+</div>
+
+<div class="evidence-card warn">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 14.11.2021 · 11:16</span>
+    <span class="tag warn">ראיה מס' 5</span>
+  </div>
+  <div class="ev-body"><em>תוכל לעשות העברה של 1960 שקל מהחוב למישהו שאני צריך להעביר לו?</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> מני מבקש להעביר 1,960 ₪ מתוך החוב שהחברה חייבת לו — לצד ג'.
+    "החוב" משמש כקרן אשראי לא-רשמית. בהמשך: <em>"👍 / נשאר 11,465"</em> —
+    יתרת חוב גדולה, נטולת תיעוד פורמלי.
+  </div>
+</div>
+
+<div class="evidence-card warn">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 15.02.2022 · 16:39</span>
+    <span class="tag warn">ראיה מס' 6</span>
+  </div>
+  <div class="ev-body">מה קורה? / <em>אני יוכל לקחת מהקופה 1000 שקל על חשבון המשכורת?</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> שוב — לקיחה ישירה מהקופה, "על חשבון משכורת". תשובת בעל החברה:
+    "כן, רק תרשום שלקחת" — אישור פורמלי לעקיפה של המערכת.
+  </div>
+</div>
+
+<div class="evidence-card critical">
+  <div class="ev-head">
+    <span><span class="ev-speaker y">Y (בעל החברה)</span> · 23.01.2023 · 19:36</span>
+    <span class="tag critical">ראיה מס' 7 — תחילת תיעוד פורמלי</span>
+  </div>
+  <div class="ev-body"><em>אפשר לכתוב משכורת חודש. / מתאריך 1.1.23</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> זו אמירה מפורשת של בעל החברה שתלוש משכורת רשמי
+    יתחיל רק מ-1.1.2023 — <strong>כשנה וחצי לאחר תחילת השותפות</strong>.
+    כל התקופה לפני כן (07/2021 – 12/2022) הייתה ללא תלוש.
+  </div>
+</div>
+
+<div class="evidence-card warn">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 19.12.2024 · 10:44</span>
+    <span class="tag warn">ראיה מס' 8 — שילום עובדים אחרים מהכיס</span>
+  </div>
+  <div class="ev-body"><em>שבוע שעבר הבאתי למזאר 6000 שקל משכורת מהכסף שלי, הבנתי שאתה אמור לעשות לי העברה איכשהו, אתה זוכר לטפל בזה?</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> מני שילם למזאר (עובד נוסף) משכורת של 6,000 ₪ מהכסף האישי שלו,
+    תוך ציפייה שיוחזר לו בהמשך. <strong>זו דוגמה קלאסית למודל מזומן ללא תיעוד —
+    שעובדים משלמים מהכיס ומחזירים להם דרך הקופה.</strong>
+  </div>
+</div>
+
+<div class="evidence-card warn">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 20.04.2026 · 12:08</span>
+    <span class="tag warn">ראיה מס' 9 — שני "חובות" נפרדים</span>
+  </div>
+  <div class="ev-body">עכשיו עדכנו אותי שמה שאני לוקח <em>מה-8/3 לא יורד מהחוב הכללי אלא מהמשכורת החדשה</em> שלי / אז מה שלקחתי לפני ה-8/3 היה 2710 / אז 91,000 / קיבלתי 2710 / נשאר <em>88,290</em></div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> אפילו ב-2026, יש שני סדרי-תשלום נפרדים:
+    <strong>(א) "החוב הכללי"</strong> — שהוא בגין כל השנים הקודמות, סכום של 91,000 ₪ פתוח;
+    <strong>(ב) "המשכורת החדשה"</strong> — תלוש פורמלי החל מ-8.3.
+    זה אישור מצטבר שיש חוב שאינו תועד בתלושים — חוב "ישן" של ~91K ₪.
+  </div>
+</div>
+
+<div class="evidence-card critical">
+  <div class="ev-head">
+    <span><span class="ev-speaker m">מני גולד פיש</span> · 05.05.2026 · 18:57</span>
+    <span class="tag critical">ראיה מס' 10 — עדות עצמית של מני</span>
+  </div>
+  <div class="ev-body">זה לא היה <em>תקופה מוגדרת</em>, <em>הייתי לוקח כסף בהתחלה</em> וגם אתה היית לוקח באותו הזמן, רק בתקופה היותר אחרונה הייתי לוקח הכול וגם אז היית לוקח מידי פעם, לקחת לאחרונה איזה 2000 מהקופה ובחגים היית לוקח</div>
+  <div class="ev-note">
+    <strong>הוכחה:</strong> <strong>אישור עצמי של מני</strong> בלשון לא מסויגת —
+    "זה לא היה תקופה מוגדרת", "הייתי לוקח כסף בהתחלה". כלומר מודל התשלום מהקופה
+    היה הסטנדרט מתחילת השותפות — ולא משכורת שנרשמה בספרי החברה.
+  </div>
+</div>
+
+<h2>חלק ב' — כל הראיות מתוך WhatsApp (כרונולוגית)</h2>
+<div id="all-evidence" class="section-card">טוען...</div>
+
+<h2>חלק ג' — מסקנות לבית דין</h2>
+<div class="section-card">
+  <ol class="summary-list">
+    <li><strong>מני הרצל היה עובד פעיל לפני 1.7.2021</strong> — ההודעה הראשונה (27.8.2021) מציינת
+    "משכורת" קיימת, ובאוקטובר 2021 יש כבר חוב פתוח של <span class="num">7,000 ₪</span> שלא נצבר
+    בשבועות הראשונים בלבד.</li>
+
+    <li><strong>תלוש משכורת ראשון רק מ-1.1.2023</strong> — אישור מפורש של בעל החברה
+    (Y) בהודעת WhatsApp מ-23.1.2023.</li>
+
+    <li><strong>כל התקופה 7/2021 – 12/2022 — תשלום במזומן מהקופה</strong>, ללא
+    דיווח לרשויות מס, ללא ביטוח לאומי, ללא הפרשות פנסיוניות.</li>
+
+    <li><strong>מודל "חוב פתוח" משמש כקרן אשראי לא-רשמית</strong> — מני העביר ב-14.11.2021
+    סכום של 1,960 ₪ <em>מתוך החוב</em> לצד ג' (ככר היהלום), והחברה רישמה זאת בעל פה כ"מקטינה חוב".</li>
+
+    <li><strong>חוב פתוח של ~91,000 ₪ ב-04/2026</strong> — מצטבר על-פני כל שנות העבודה
+    הלא-מתועדת. זה החוב "הכללי", שאינו חלק מהמשכורת הפורמלית החדשה.</li>
+
+    <li><strong>הפסדים בלתי-ניתנים לחישוב</strong>: דמי הבראה, פיצויי פיטורין, ימי
+    חופשה צבורים, ביטוח לאומי, מס הכנסה — כולם לא דווחו ולא נצברו בכל התקופה
+    הראשונה.</li>
+  </ol>
+</div>
+
+</div>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString('he-IL');
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function load() {
+  const r = await fetch('/api/mani-evidence');
+  const data = await r.json();
+  document.getElementById('meta').textContent =
+    `מתוך התכתבות WhatsApp עם "מני גולד פיש" · ${data.total} הודעות בכתב-יד שנמצאו · הופק: ${new Date().toLocaleString('he-IL')}`;
+
+  const items = data.items || [];
+  const html = items.map(it => {
+    const isY = it.speaker === 'Y' || /^Y/.test(it.speaker);
+    const cls = isY ? 'y' : 'm';
+    const body = esc(it.body).replace(/\s\/\s/g, '<br>');
+    return `<div class="evidence-card">
+      <div class="ev-head">
+        <span><span class="ev-speaker ${cls}">${esc(it.speaker)}</span> · ${esc(it.date)} · ${esc(it.time)}</span>
+      </div>
+      <div class="ev-body">${body}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('all-evidence').innerHTML = html || '<em>אין נתונים</em>';
+}
+load();
+</script>
+</body>
+</html>

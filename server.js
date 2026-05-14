@@ -117,6 +117,15 @@ app.get('/api/data', (_req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Mani employment evidence (extracted from WhatsApp chat)
+app.get('/api/mani-evidence', (_req, res) => {
+  try {
+    const p = join(__dirname, 'mani-evidence.json');
+    if (!existsSync(p)) return res.json({ total: 0, items: [] });
+    res.json(JSON.parse(readFileSync(p, 'utf8')));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Classifications are stored in classifications.json (user-editable via API).
 const CLASSIFICATIONS_PATH = join(__dirname, 'classifications.json');
 function loadClassifications() {
